@@ -49,7 +49,7 @@ int main(int argc, char const *argv[])
         return -1;
     }
 
-    if(inet_pton(AF_INET, "127.0.0.1", &tc_server.sin_addr)<=0) 
+    if(inet_pton(AF_INET, "10.0.1.5", &tc_server.sin_addr)<=0) 
     {
         printf("\nInvalid TC address/ Address not supported \n");
         return -1;
