@@ -65,7 +65,7 @@ int main(int argc, char const *argv[])
 		perror("tc setsockopt");
 		exit(EXIT_FAILURE);
 	}
-
+	/*
 	if(inet_aton("10.0.1.5", &addrptr)==0)
 	{
 		perror("aton error");
@@ -75,14 +75,19 @@ int main(int argc, char const *argv[])
 	{
 		#ifdef debug
 		printf("succesfully converted IP-address\n");
-		#endif /* debug */
-	}
+		#endif
+	} */
 
 
 	address_tm.sin_family = AF_INET;
 	address_tm.sin_addr.s_addr = INADDR_ANY;	//INADDR_ANY should bind the socket to the localhost address
 	address_tc.sin_family = AF_INET;
-	address_tc.sin_addr.s_addr = addrptr;
+	//address_tc.sin_addr.s_addr = addrptr;
+	if(inet_aton("10.0.1.5", &address_tc.sin_addr.s_addr) == 0)
+	{
+		perror("aton error");
+		exit(EXIT_FAILURE);
+	}
 	// htons returns the value in TCP/IP network order
 	address_tm.sin_port = htons(TM_PORT);
 	address_tc.sin_port = htons(TC_PORT);
