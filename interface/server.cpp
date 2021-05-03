@@ -83,7 +83,7 @@ int main(int argc, char const *argv[])
 	address_tm.sin_addr.s_addr = INADDR_ANY;	//INADDR_ANY should bind the socket to the localhost address
 	address_tc.sin_family = AF_INET;
 	//address_tc.sin_addr.s_addr = addrptr;
-	if(inet_aton("10.0.1.5", &address_tc.sin_addr.s_addr) == 0)
+	if(inet_aton("10.0.1.5", &address_tc.sin_addr) == 0)
 	{
 		perror("aton error");
 		exit(EXIT_FAILURE);
