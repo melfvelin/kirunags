@@ -108,6 +108,11 @@ int main(int argc, char const *argv[])
 		perror("tm bind failed");
 		exit(EXIT_FAILURE);
 	}
+
+	#ifdef debug
+	printf("bind successfull on %u:%u\n", address_tm.sin_addr.s_addr, ntohs(address_tm.sin_port));
+	#endif /* debug */
+
 	// Attempting to bind tc address
 	if(bind(server_tc, (struct sockaddr *)&address_tc, sizeof(address_tc)) < 0 )
 	{
@@ -116,8 +121,9 @@ int main(int argc, char const *argv[])
 	}
 
 	#ifdef debug
-	printf("bind successfull on ip %u:%u\n", address_tm.sin_addr.s_addr, address_tm.sin_port);
+	printf("bind successfull on %u:%u\n", address_tc.sin_addr.s_addr, ntohs(address_tc.sin_port));
 	#endif /* debug */
+	
 
 	if(listen(server_tm, 3) < 0)
 	{
