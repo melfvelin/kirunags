@@ -12,20 +12,27 @@
 #define DO_PORT 2007
 #define DE_PORT 2009
 
+#ifndef debug
+#define debug
+#endif /* debug */
+
+
 int main(int argc, char const *argv[])
 {
 	// Init of variables
 	int server_fd;
+	int server_tc;
 	int new_socket;
 	int valread;
-	struct sockaddr_in address;
+	struct sockaddr_in address_tm;
+	struct sockaddr_in address_tc;
 	int opt = 1;
-	int addrlen = sizeof(address);
+	int addrlen = sizeof(address_tm);
 
 	// Init char array of zeros
 	char buffer[1024] = {0};
-	char hello[32] = "Hello from server";
-	std::string s_hello = "Hello from serverString";
+	char const *hello = "Hello from server";
+	char const *telem = "This is a telemetry message";
 
 	// Creating socket file descriptor
 	if((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
@@ -34,21 +41,54 @@ int main(int argc, char const *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	// No idea what this does so far
+	// creating a socket file descriptor for tc socket
+	if((server_tc = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+	{
+		perror("TC socket creation failed\n");
+		exit(EXIT_FAILURE);
+	}
+
+	// returns 0 on success, the function sets a socket option
 	if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
 	{
 		perror("setsockopt");
 		exit(EXIT_FAILURE);
 	}
 
-	address.sin_family = AF_INET;
-	address.sin_addr.s_addr = INADDR_ANY;	//INADDR_ANY should bind the socket to the localhost address
-	address.sin_port = htons(TM_PORT);
+	// sets a socket option for tc socket
+	if(setsockopt(server_tc, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+	{
+		perror("tc setsockopt");
+		exit(EXIT_FAILURE);
+	}
+
+	address_tm.sin_family = AF_INET;
+	address_tm.sin_addr.s_addr = INADDR_ANY;	//INADDR_ANY should bind the socket to the localhost address
+	address_tc.sin_family = AF_INET;
+	address_tc.sin_addr.s_addr = INADDR_ANY;
+	// htons returns the value in TCP/IP network order
+	address_tm.sin_port = htons(TM_PORT);
+	address_tc.sin_port = htons(TC_PORT);
+
+	#ifdef debug
+	printf("Input to htons: %i\n ", TM_PORT);
+	printf("Output from htons: %i\n", htons(TM_PORT));
+	#endif /* debug */
+
 	// The above things go into the below bind function, I think
 
-	if(bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0)
+	// Attempting to bind
+	// The struct sockaddr contains the port number and another struct called in_addr (Internet address)
+	// the (struct sockaddr *)&pointer is a typecast from struct sockaddr_in to struct sockaddr
+	if(bind(server_fd, (struct sockaddr *)&address_tm, sizeof(address_tm)) < 0 )
 	{
-		perror("bind failed");
+		perror("tm bind failed");
+		exit(EXIT_FAILURE);
+	}
+	// Attempting to bind tc address
+	if(bind(server_tc, (struct sockaddr *)&address_tc, sizeof(address_tc)) < 0 )
+	{
+		perror("tc bind failed");
 		exit(EXIT_FAILURE);
 	}
 
@@ -58,19 +98,19 @@ int main(int argc, char const *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen)) < 0)
+	if((new_socket = accept(server_fd, (struct sockaddr *)&address_tm, (socklen_t*)&addrlen)) < 0)
 	{
 		perror("accept");
 		exit(EXIT_FAILURE);
 	}
 
-	while(1)
-	{
-		// Reading value from new_socket to buffer
-		valread = read(new_socket, buffer, 1024);
-		// printing buffer
-		printf("%s\n", buffer);	
-	}
+
+
+	// Reading value from new_socket to buffer
+	valread = read(new_socket, buffer, 1024);
+	// printing buffer
+	printf("%s\n", buffer);	
+	
 	
 
 	send(new_socket, hello, strlen(hello), 0);

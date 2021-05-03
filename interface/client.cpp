@@ -7,13 +7,17 @@
 #include <string>
 #include <cstring>
 
-#define PORT 2001
+#define TM_PORT 2001
+#define TC_PORT 2002
+#define DO_PORT 2007
+#define DE_PORT 2008
    
 int main(int argc, char const *argv[])
 {
     int sock = 0, valread;
     struct sockaddr_in serv_addr;
-    char hello[32] = "Hello from client";
+    char const *hello = "Hello from client";
+    char const *telec = "This is a telecommand";
     std::string s_hello = "Hello from clientString";
     char buffer[1024] = {0};
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
@@ -23,7 +27,7 @@ int main(int argc, char const *argv[])
     }
    
     serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
+    serv_addr.sin_port = htons(TM_PORT);
        
     // Convert IPv4 and IPv6 addresses from text to binary form
     if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) 
