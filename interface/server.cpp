@@ -80,7 +80,7 @@ int main(int argc, char const *argv[])
 	// Attempting to bind
 	// The struct sockaddr contains the port number and another struct called in_addr (Internet address)
 	// the (struct sockaddr *)&pointer is a typecast from struct sockaddr_in to struct sockaddr
-	if(bind(server_fd, (struct sockaddr *)&address_tm, sizeof(address_tm)) < 0 )
+	if(bind(server_tm, (struct sockaddr *)&address_tm, sizeof(address_tm)) < 0 )
 	{
 		perror("tm bind failed");
 		exit(EXIT_FAILURE);
@@ -92,30 +92,40 @@ int main(int argc, char const *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if(listen(server_fd, 3) < 0)
+	if(listen(server_tm, 3) < 0)
 	{
 		perror("listen");
 		exit(EXIT_FAILURE);
 	}
 
-	if((new_socket = accept(server_fd, (struct sockaddr *)&address_tm, (socklen_t*)&addrlen)) < 0)
+	if(listen(server_tc, 3) < 0)
 	{
-		perror("accept");
+		perror("listen");
 		exit(EXIT_FAILURE);
 	}
 
+	if((tm_socket = accept(server_tm, (struct sockaddr *)&address_tm, (socklen_t*)&addrlen)) < 0)
+	{
+		perror("tm accept");
+		exit(EXIT_FAILURE);
+	}
 
+	if((tc_socket = accept(server_tc, (struct sockaddr *)&address_tc, (socklen_t*)&addrlen)) < 0)
+	{
+		perror("tc accept");
+		exit(EXIT_FAILURE);
+	}
 
 	// Reading value from new_socket to buffer
-	valread = read(new_socket, buffer, 1024);
+	valread = read(tc_socket, buffer, 1024);
 	// printing buffer
-	printf("%s\n", buffer);	
+	printf("Received TC message: %s\n", buffer);	
 	
 	
 
-	send(new_socket, hello, strlen(hello), 0);
+	send(tm_socket, telem, strlen(telem), 0);
 	// send(new_socket, s_hello, strlen(hello), 0);
-	// sending strings does not work
+	
 	printf("Attempted to send: %s \n", hello);
 
 	return 0;
