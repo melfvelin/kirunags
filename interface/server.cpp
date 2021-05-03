@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <string>
 #include <cstring>
+#include <arpa/inet.h>
 
 #define TM_PORT 2001
 #define TC_PORT 2002
