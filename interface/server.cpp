@@ -20,9 +20,11 @@
 int main(int argc, char const *argv[])
 {
 	// Init of variables
-	int server_fd;
+	int server_tm;
 	int server_tc;
 	int new_socket;
+	int tc_socket;
+	int tm_socket;
 	int valread;
 	struct sockaddr_in address_tm;
 	struct sockaddr_in address_tc;
@@ -35,7 +37,7 @@ int main(int argc, char const *argv[])
 	char const *telem = "This is a telemetry message";
 
 	// Creating socket file descriptor
-	if((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+	if((server_tm = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 	{
 		perror("Socket creation failed\n");
 		exit(EXIT_FAILURE);
@@ -49,7 +51,7 @@ int main(int argc, char const *argv[])
 	}
 
 	// returns 0 on success, the function sets a socket option
-	if(setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+	if(setsockopt(server_tm, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
 	{
 		perror("setsockopt");
 		exit(EXIT_FAILURE);
@@ -109,11 +111,23 @@ int main(int argc, char const *argv[])
 		perror("listen");
 		exit(EXIT_FAILURE);
 	}
+	else
+	{
+		#ifdef debug
+		printf("\nServer listening for connections on %i\n", TM_PORT);
+		#endif /* debug */
+	}
 
 	if(listen(server_tc, 3) < 0)
 	{
 		perror("listen");
 		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		#ifdef debug
+		printf("\nServer listening for connections on %i\n", TC_PORT);
+		#endif /* debug */
 	}
 
 	if((tm_socket = accept(server_tm, (struct sockaddr *)&address_tm, (socklen_t*)&addrlen)) < 0)
@@ -138,7 +152,7 @@ int main(int argc, char const *argv[])
 	send(tm_socket, telem, strlen(telem), 0);
 	// send(new_socket, s_hello, strlen(hello), 0);
 	
-	printf("Attempted to send: %s \n", hello);
+	printf("Attempted to send: %s \n", telem);
 
 	return 0;
 }
