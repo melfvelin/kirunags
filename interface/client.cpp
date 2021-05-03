@@ -51,7 +51,7 @@ int main(int argc, char const *argv[])
     // Convert IPv4 and IPv6 addresses from text to binary form
     if(inet_pton(AF_INET, "127.0.0.1", &tm_server.sin_addr)<=0) 
     {
-        printf("\nInvalid TM address/ Address not supported \n");
+        printf("\nInvalid TM address/ Addrescis not supported \n");
         return -1;
     }
 
@@ -82,7 +82,7 @@ int main(int argc, char const *argv[])
     #endif /* debug */
 
     send(sock2 , telec , strlen(telec) , 0 );
-    
+
     printf("Attempted to send: %s\n", telec);
     valread = read( sock , buffer, 1024);
     printf("Received TM message: %s\n",buffer );

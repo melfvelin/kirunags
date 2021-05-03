@@ -24,8 +24,8 @@ int main(int argc, char const *argv[])
 	int server_tm;
 	int server_tc;
 	int new_socket;
-	int tc_socket;
-	int tm_socket;
+	int tc_socket = 0;
+	int tm_socket = 0;
 	int valread;
 	struct sockaddr_in address_tm;
 	struct sockaddr_in address_tc;
@@ -154,11 +154,18 @@ int main(int argc, char const *argv[])
 		perror("tm accept");
 		exit(EXIT_FAILURE);
 	}
-
+	else if(tm_socket != 0)
+	{
+		printf("Connection accepted on tm socket!\n");
+	}
 	if((tc_socket = accept(server_tc, (struct sockaddr *)&address_tc, (socklen_t*)&addrlen)) < 0)
 	{
 		perror("tc accept");
 		exit(EXIT_FAILURE);
+	}
+	else if(tc_socket != 0)
+	{
+		printf("Connection accepted on tc socket!\n");
 	}
 
 	// Reading value from new_socket to buffer
