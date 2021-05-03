@@ -11,6 +11,9 @@
 #define TC_PORT 2002
 #define DO_PORT 2007
 #define DE_PORT 2008
+#ifndef debug
+#define debug
+#endif /* debug */
    
 int main(int argc, char const *argv[])
 {
@@ -22,6 +25,9 @@ int main(int argc, char const *argv[])
     char const *hello = "Hello from client";
     char const *telec = "This is a telecommand";
     char buffer[1024] = {0};
+    char *tc_ip;
+    char *tm_ip;
+
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         printf("\n Socket creation error \n");
@@ -60,14 +66,23 @@ int main(int argc, char const *argv[])
         printf("\nTM Connection Failed \n");
         return -1;
     }
+    #ifdef debug
+        tm_ip = inet_ntoa(tm_server.sin_addr);
+        printf("Client: attempting to connect on %s:%u\n", tm_ip, ntohs(tm_server.sin_port));
+    #endif /* debug */
 
     if (connect(sock2, (struct sockaddr *)&tc_server, sizeof(tc_server)) < 0)
     {
         printf("\nTC Connection Failed \n");
         return -1;
     }
+    #ifdef debug
+        tc_ip = inet_ntoa(tc_server.sin_addr);
+        printf("Client: attempting to connect on %s:%u\n", tc_ip, ntohs(tc_server.sin_port));
+    #endif /* debug */
 
     send(sock2 , telec , strlen(telec) , 0 );
+    
     printf("Attempted to send: %s\n", telec);
     valread = read( sock , buffer, 1024);
     printf("Received TM message: %s\n",buffer );

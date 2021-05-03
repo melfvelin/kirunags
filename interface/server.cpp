@@ -133,25 +133,21 @@ int main(int argc, char const *argv[])
 	{
 		perror("listen");
 		exit(EXIT_FAILURE);
-	}
-	else
-	{
-		#ifdef debug
+	}	
+	#ifdef debug
 		printf("\nServer listening for connections on %i\n", TM_PORT);
-		#endif /* debug */
-	}
+	#endif /* debug */
+	
 
 	if(listen(server_tc, 3) < 0)
 	{
 		perror("listen");
 		exit(EXIT_FAILURE);
 	}
-	else
-	{
-		#ifdef debug
+	#ifdef debug
 		printf("\nServer listening for connections on %i\n", TC_PORT);
-		#endif /* debug */
-	}
+	#endif /* debug */
+	
 
 	if((tm_socket = accept(server_tm, (struct sockaddr *)&address_tm, (socklen_t*)&addrlen)) < 0)
 	{
