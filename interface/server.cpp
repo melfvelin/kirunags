@@ -116,7 +116,7 @@ int main(int argc, char const *argv[])
 	}
 
 	#ifdef debug
-	printf("bind successfull on ip %u:%u\n", *address_tm.sin_addr.s_addr, *address_tm.sin_port);
+	printf("bind successfull on ip %u:%u\n", address_tm.sin_addr.s_addr, address_tm.sin_port);
 	#endif /* debug */
 
 	if(listen(server_tm, 3) < 0)
