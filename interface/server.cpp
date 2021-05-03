@@ -38,7 +38,7 @@ int main(int argc, char const *argv[])
 	char const *hello = "Hello from server";
 	char const *telem = "This is a telemetry message";
 
-	// Creating socket file descriptor
+	// Creating socket file descriptor STEP 1
 	if((server_tm = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 	{
 		perror("Socket creation failed\n");
@@ -52,7 +52,7 @@ int main(int argc, char const *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	// returns 0 on success, the function sets a socket option
+	// returns 0 on success, the function sets a socket option STEP 2 GOOD PRACTICE
 	if(setsockopt(server_tm, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
 	{
 		perror("setsockopt");
@@ -93,8 +93,7 @@ int main(int argc, char const *argv[])
 	address_tc.sin_port = htons(TC_PORT);
 
 	#ifdef debug
-	printf("Input to htons: %i\n ", TM_PORT);
-	printf("Output from htons: %i\n", htons(TM_PORT));
+
 	#endif /* debug */
 
 	// The above things go into the below bind function, I think
@@ -102,6 +101,8 @@ int main(int argc, char const *argv[])
 	// Attempting to bind
 	// The struct sockaddr contains the port number and another struct called in_addr (Internet address)
 	// the (struct sockaddr *)&pointer is a typecast from struct sockaddr_in to struct sockaddr
+	
+	// STEP 3
 	if(bind(server_tm, (struct sockaddr *)&address_tm, sizeof(address_tm)) < 0 )
 	{
 		perror("tm bind failed");
@@ -113,6 +114,10 @@ int main(int argc, char const *argv[])
 		perror("tc bind failed");
 		exit(EXIT_FAILURE);
 	}
+
+	#ifdef debug
+	printf("bind successfull on ip %u:%u\n", *address_tm.sin_addr.s_addr, *address_tm.sin_port);
+	#endif /* debug */
 
 	if(listen(server_tm, 3) < 0)
 	{
