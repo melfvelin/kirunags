@@ -62,6 +62,18 @@ int main(int argc, char const *argv[])
 		exit(EXIT_FAILURE);
 	}
 
+	if(inet_aton("10.0.1.5", &address_tc.sin_addr.s_addr)==0)
+	{
+		perror("aton error");
+		exit(EXIT_FAILURE);
+	}
+	else
+	{
+		#ifdef debug
+		printf("succesfully converted IP-address\n");
+		#endif /* debug */
+	}
+
 	address_tm.sin_family = AF_INET;
 	address_tm.sin_addr.s_addr = INADDR_ANY;	//INADDR_ANY should bind the socket to the localhost address
 	address_tc.sin_family = AF_INET;
