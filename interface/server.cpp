@@ -32,6 +32,8 @@ int main(int argc, char const *argv[])
 	struct in_addr addrptr;
 	int opt = 1;
 	int addrlen = sizeof(address_tm);
+	char *tc_ip;
+	char *tm_ip;
 
 	// Init char array of zeros
 	char buffer[1024] = {0};
@@ -110,7 +112,8 @@ int main(int argc, char const *argv[])
 	}
 
 	#ifdef debug
-	printf("bind successfull on %u:%u\n", address_tm.sin_addr.s_addr, ntohs(address_tm.sin_port));
+	tc_ip = inet_ntoa(address_tm.sin_addr);
+	printf("bind successfull on %s:%u\n", tm_ip, ntohs(address_tm.sin_port));
 	#endif /* debug */
 
 	// Attempting to bind tc address
@@ -121,7 +124,8 @@ int main(int argc, char const *argv[])
 	}
 
 	#ifdef debug
-	printf("bind successfull on %u:%u\n", address_tc.sin_addr.s_addr, ntohs(address_tc.sin_port));
+	tm_ip = inet_ntoa(address_tc.sin_addr);
+	printf("bind successfull on %s:%u\n", tc_ip, ntohs(address_tc.sin_port));
 	#endif /* debug */
 	
 
