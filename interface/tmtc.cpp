@@ -111,6 +111,49 @@ namespace tmtc
 		return (((bcd >> 4) * 10) + (bcd & 0xF));
 	}
 } /* tmtc */ 
+	/*	decapsulate - decapsulates a TC packet down to payload data
+	*	in:
+	*	out:
+	*	author:
+	*/
+	int decapsulate(uint8_t *tc_ptr, uint32_t data_size)
+	{
+		// memcpy(packet, tc_ptr, data_size);
+		// save TC header first
+		memcpy(&tc_header, tc_ptr, sizeof(TC_HEADER));
+		// use tf_size from TC header to malloc memory for payload
+		uint8_t *payload = (uint8_t *)malloc(tc_header.tf_size);
+		// copy data from TC pointer to payload
+		memcpy(payload, (tc_ptr + sizeof(TC_HEADER)), tc_header.tf_size);
+		// print payload
+		std::cout << "Payload: " << payload << std::endl;
+
+		return 0;
+	}
+
+	void sendTC_frame()
+	{
+		
+
+		TC_HEADER tx_tc_frame;
+		tx_tc_frame.preamble = 0xA1B2C3D4;
+		const char message[] = "TC TEST MESSAGE";
+		uint32_t total_len = (sizeof(TC_HEADER) + sizeof(message));
+		tx_tc_frame.total_len = total_len;
+		tx_tc_frame.tf_size = sizeof(message);
+		// adding message after tc header
+		//memcpy((tx_tc_frame + sizeof(TC_HEADER)), &message, tx_tc_frame.tf_size);
+
+		uint8_t *tc_ptr = (uint8_t *)malloc(tx_tc_frame.total_len);
+		memcpy(tc_ptr, &tx_tc_frame, sizeof(TC_HEADER));
+		memcpy((tc_ptr + sizeof(TC_HEADER)), &message, tx_tx_frame.tf_size);
+		if(tmtc::decapsulate(tc_ptr, total_len) == 0)
+		{
+			std::cout << "Successfully decapsulated tc frame!" << std::endl;
+		}
+
+		return;
+	}
 
 /* main() - makes function calls to other methods
 *	takes data as input from user: word[64] or hard coded data: inData
@@ -120,6 +163,7 @@ namespace tmtc
 int main()
 	{
     	//const char *inData = (const char *)0b01010101;
+    	sendTC_frame();
     	char word[64];
     	std::cout << "Please enter data (<64 byte): " << std::endl;
     	std::cin >> word;

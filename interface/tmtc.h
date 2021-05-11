@@ -18,16 +18,18 @@ namespace tmtc
 {
 
    	int encapsulate(const char *data, uint32_t data_size);
-   	int decapsulate(const char *frame);
+   	int decapsulate(uint8_t *tc_ptr, uint32_t data_size);
    	int parse_tm_header(uint8_t *frame_ptr);
- 	int extract_data(uint8_t *frame_ptr);
+ 	  int extract_data(uint8_t *frame_ptr);
     uint64_t GenIRIGBTag();
     int DecimalToBCD(int decimal);
    	int BCDToDecimal(int bcd);
+    void sendTC_frame();
    	
    	// 'public' declaration of TM_HEADER
    	TM_HEADER tm_header;
    	TM_FRAME tm_frame;
+    TC_HEADER tc_header;
    	uint32_t postamble;
 }
 
