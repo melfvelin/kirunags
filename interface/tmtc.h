@@ -29,7 +29,7 @@ namespace tmtc
    	// 'public' declaration of TM_HEADER
    	TM_HEADER tm_header;
    	TM_FRAME tm_frame;
-    TC_HEADER tc_header;
+   	TC_HEADER tc_header;
    	uint32_t postamble;
 }
 

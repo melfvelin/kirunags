@@ -110,7 +110,7 @@ namespace tmtc
 	{
 		return (((bcd >> 4) * 10) + (bcd & 0xF));
 	}
-} /* tmtc */ 
+
 	/*	decapsulate - decapsulates a TC packet down to payload data
 	*	in:
 	*	out:
@@ -146,7 +146,7 @@ namespace tmtc
 
 		uint8_t *tc_ptr = (uint8_t *)malloc(tx_tc_frame.total_len);
 		memcpy(tc_ptr, &tx_tc_frame, sizeof(TC_HEADER));
-		memcpy((tc_ptr + sizeof(TC_HEADER)), &message, tx_tx_frame.tf_size);
+		memcpy((tc_ptr + sizeof(TC_HEADER)), &message, tx_tc_frame.tf_size);
 		if(tmtc::decapsulate(tc_ptr, total_len) == 0)
 		{
 			std::cout << "Successfully decapsulated tc frame!" << std::endl;
@@ -154,7 +154,7 @@ namespace tmtc
 
 		return;
 	}
-
+} /* tmtc */
 /* main() - makes function calls to other methods
 *	takes data as input from user: word[64] or hard coded data: inData
 *	inData is of variable length, word is 64 bytes
@@ -163,7 +163,7 @@ namespace tmtc
 int main()
 	{
     	//const char *inData = (const char *)0b01010101;
-    	sendTC_frame();
+    	tmtc::sendTC_frame();
     	char word[64];
     	std::cout << "Please enter data (<64 byte): " << std::endl;
     	std::cin >> word;
