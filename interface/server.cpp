@@ -1,5 +1,5 @@
 // This is the TCP/IP server
-#include <unistd.h>
+/* #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -12,6 +12,8 @@
 #define TC_PORT 2002
 #define DO_PORT 2007
 #define DE_PORT 2009
+*/
+#include "server.h"
 
 #ifndef debug
 #define debug
@@ -103,7 +105,7 @@ int main(int argc, char const *argv[])
 	// Attempting to bind
 	// The struct sockaddr contains the port number and another struct called in_addr (Internet address)
 	// the (struct sockaddr *)&pointer is a typecast from struct sockaddr_in to struct sockaddr
-	
+
 	// STEP 3
 	if(bind(server_tm, (struct sockaddr *)&address_tm, sizeof(address_tm)) < 0 )
 	{
@@ -127,17 +129,17 @@ int main(int argc, char const *argv[])
 	tm_ip = inet_ntoa(address_tc.sin_addr);
 	printf("bind successfull on %s:%u\n", tc_ip, ntohs(address_tc.sin_port));
 	#endif /* debug */
-	
+
 
 	if(listen(server_tm, 3) < 0)
 	{
 		perror("listen");
 		exit(EXIT_FAILURE);
-	}	
+	}
 	#ifdef debug
 		printf("\nServer listening for connections on %i\n", TM_PORT);
 	#endif /* debug */
-	
+
 
 	if(listen(server_tc, 3) < 0)
 	{
@@ -147,7 +149,7 @@ int main(int argc, char const *argv[])
 	#ifdef debug
 		printf("\nServer listening for connections on %i\n", TC_PORT);
 	#endif /* debug */
-	
+
 
 	if((tm_socket = accept(server_tm, (struct sockaddr *)&address_tm, (socklen_t*)&addrlen)) < 0)
 	{
@@ -171,16 +173,17 @@ int main(int argc, char const *argv[])
 	// Reading value from new_socket to buffer
 	valread = read(tc_socket, buffer, 1024);
 	// printing buffer
-	printf("Received TC message: %s\n", buffer);	
-	
-	
-
+	printf("Received TC message: %s\n", buffer);
+    uint8_t *buff_ptr = (uint8_t *)malloc(sizeof(buffer));      // might be unnecessary
+    memcpy(buff_ptr, &buffer, sizeof(buffer));                  // strlen might work also
+    // tmtc::decapsulate(buff_ptr, 0);
 	send(tm_socket, telem, strlen(telem), 0);
 	// send(new_socket, s_hello, strlen(hello), 0);
-	
+
 	printf("Attempted to send: %s \n", telem);
 
 	return 0;
 }
+
 
 

@@ -40,7 +40,7 @@ namespace tmtc
 
 		// next step is to copy the data into the memory following the header
 		memcpy(frame_ptr + sizeof(tm_header), &data, sizeof(data));
-		
+
 		// now we add the postamble after the data
 		memcpy(frame_ptr + sizeof(tm_header) + sizeof(data), &postamble, sizeof(postamble));
 
@@ -51,7 +51,8 @@ namespace tmtc
 
 	int parse_tm_header(uint8_t *frame_ptr)
 	{
-		// tm_frame = (TM_FRAME)frame_ptr;
+        // test test
+		tm_frame = (struct _TM_FRAME *)&frame_ptr;
 		memcpy(&tm_frame, frame_ptr, sizeof(TM_HEADER));
 		std::cout << "Preamble: " << std::hex << (tm_frame.preamble & 0xFFFFFFFF) << std::endl;
 		std::cout << "Total length: " << std::dec << (tm_frame.total_len & 0xFFF) << std::endl;
@@ -72,12 +73,12 @@ namespace tmtc
 
 		return 0;
 	}
-	
+
 	uint64_t GenIRIGBTag()
 	{
     	timespec spec;
     	clock_gettime(CLOCK_REALTIME,&spec);
-    	tm* gmtm = gmtime(&spec.tv_sec);	
+    	tm* gmtm = gmtime(&spec.tv_sec);
     	uint8_t IRIGB[8];
     	IRIGB[0] = 0xFF;
     	IRIGB[1] = (uint8_t)DecimalToBCD(gmtm->tm_yday%100);
@@ -86,7 +87,7 @@ namespace tmtc
     	IRIGB[4] = (uint8_t)DecimalToBCD(gmtm->tm_min);
     	IRIGB[5] = (uint8_t)DecimalToBCD(gmtm->tm_sec);
     	long ms  = spec.tv_nsec/(1E6);
-    	IRIGB[6] = (uint8_t)DecimalToBCD(ms/10);	
+    	IRIGB[6] = (uint8_t)DecimalToBCD(ms/10);
     	IRIGB[7] = (uint8_t)DecimalToBCD(ms%10);
     	uint64_t IRIGB_Code;
     	memcpy(&IRIGB_Code,&IRIGB[0],8);
@@ -96,7 +97,7 @@ namespace tmtc
         std::cout << "gmtm->tm_yday%100 = " << (gmtm->tm_yday%100) << std::endl;
         std::cout << "gmtm->tm_yday/100 = " << (gmtm->tm_yday/100) << std::endl;
         std::cout << "gmtm->tm_min = " << (gmtm->tm_min) << std::endl;
-    
+
        	return IRIGB_Code;
 
 	}
@@ -133,7 +134,7 @@ namespace tmtc
 
 	void sendTC_frame()
 	{
-		
+
 
 		TC_HEADER tx_tc_frame;
 		tx_tc_frame.preamble = 0xA1B2C3D4;
@@ -158,7 +159,7 @@ namespace tmtc
 /* main() - makes function calls to other methods
 *	takes data as input from user: word[64] or hard coded data: inData
 *	inData is of variable length, word is 64 bytes
-*	sends data to encapsulate() 
+*	sends data to encapsulate()
 */
 int main()
 	{
@@ -176,9 +177,10 @@ int main()
     	{
     		std::cout << "encapsulate returned 0\n";
     	}
-    
+
     	return 0;
 	}
+
 
 
 
