@@ -25,13 +25,7 @@ namespace tmtc
     int DecimalToBCD(int decimal);
    	int BCDToDecimal(int bcd);
     void sendTC_frame();
-   	
-   	// 'public' declaration of TM_HEADER
-   	TM_HEADER tm_header;
-   	TM_FRAME tm_frame;
-   	TC_HEADER tc_header;
-   	uint32_t postamble;
-}
+  }
 
 
 

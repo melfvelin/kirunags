@@ -18,6 +18,8 @@
 #define DO_PORT 2007
 #define DE_PORT 2009
 
-int main(int argc, char const *argv[]);
-
+namespace server
+{
+	int setup(void);
+}
 #endif /* SERVER_H */

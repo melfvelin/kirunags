@@ -14,13 +14,17 @@
 #define DE_PORT 2009
 */
 #include "server.h"
+#include "tmtc.h"
+#include "tables.h"
+//#include "tmtc.h"
 
 #ifndef debug
 #define debug
 #endif /* debug */
 
 
-int main(int argc, char const *argv[])
+namespace server{
+int setup(void)
 {
 	// Init of variables
 	int server_tm;
@@ -39,57 +43,42 @@ int main(int argc, char const *argv[])
 
 	// Init char array of zeros
 	char buffer[1024] = {0};
-	char const *hello = "Hello from server";
-	char const *telem = "This is a telemetry message";
 
 	// Creating socket file descriptor STEP 1
 	if((server_tm = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 	{
-		perror("Socket creation failed\n");
+		perror("[server.cpp:setup] Socket creation failed:");
 		exit(EXIT_FAILURE);
 	}
 
 	// creating a socket file descriptor for tc socket
 	if((server_tc = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 	{
-		perror("TC socket creation failed\n");
+		perror("[server.cpp:setup] TC socket creation failed:");
 		exit(EXIT_FAILURE);
 	}
 
 	// returns 0 on success, the function sets a socket option STEP 2 GOOD PRACTICE
 	if(setsockopt(server_tm, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
 	{
-		perror("setsockopt");
+		perror("[server.cpp:setup] setsockopt:");
 		exit(EXIT_FAILURE);
 	}
 
 	// sets a socket option for tc socket
 	if(setsockopt(server_tc, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
 	{
-		perror("tc setsockopt");
+		perror("[server.cpp:setup] tc setsockopt:");
 		exit(EXIT_FAILURE);
 	}
-	/*
-	if(inet_aton("10.0.1.5", &addrptr)==0)
-	{
-		perror("aton error");
-		exit(EXIT_FAILURE);
-	}
-	else
-	{
-		#ifdef debug
-		printf("succesfully converted IP-address\n");
-		#endif
-	} */
-
 
 	address_tm.sin_family = AF_INET;
 	address_tm.sin_addr.s_addr = INADDR_ANY;	//INADDR_ANY should bind the socket to the localhost address
 	address_tc.sin_family = AF_INET;
 	//address_tc.sin_addr.s_addr = addrptr;
-	if(inet_aton("10.0.1.5", &address_tc.sin_addr) == 0)
+	if(inet_aton("127.0.0.1", &address_tc.sin_addr) == 0)
 	{
-		perror("aton error");
+		perror("[server.cpp:setup] aton error");
 		exit(EXIT_FAILURE);
 	}
 	// htons returns the value in TCP/IP network order
@@ -109,81 +98,83 @@ int main(int argc, char const *argv[])
 	// STEP 3
 	if(bind(server_tm, (struct sockaddr *)&address_tm, sizeof(address_tm)) < 0 )
 	{
-		perror("tm bind failed");
+		perror("[server.cpp:setup] tm bind failed:");
 		exit(EXIT_FAILURE);
 	}
 
 	#ifdef debug
 	tc_ip = inet_ntoa(address_tm.sin_addr);
-	printf("bind successfull on %s:%u\n", tm_ip, ntohs(address_tm.sin_port));
+	printf("[server.cpp:setup] bind successfull on %s:%u\n", tm_ip, ntohs(address_tm.sin_port));
 	#endif /* debug */
 
 	// Attempting to bind tc address
 	if(bind(server_tc, (struct sockaddr *)&address_tc, sizeof(address_tc)) < 0 )
 	{
-		perror("tc bind failed");
+		perror("[server.cpp:setup] tc bind failed:");
 		exit(EXIT_FAILURE);
 	}
 
 	#ifdef debug
 	tm_ip = inet_ntoa(address_tc.sin_addr);
-	printf("bind successfull on %s:%u\n", tc_ip, ntohs(address_tc.sin_port));
+	printf("[server.cpp:setup] bind successfull on %s:%u\n", tc_ip, ntohs(address_tc.sin_port));
 	#endif /* debug */
 
 
 	if(listen(server_tm, 3) < 0)
 	{
-		perror("listen");
+		perror("[server.cpp:setup] listen:");
 		exit(EXIT_FAILURE);
 	}
 	#ifdef debug
-		printf("\nServer listening for connections on %i\n", TM_PORT);
+		printf("[server.cpp:setup] Server listening for connections on %i\n", TM_PORT);
 	#endif /* debug */
 
 
 	if(listen(server_tc, 3) < 0)
 	{
-		perror("listen");
+		perror("[server.cpp:setup] listen:");
 		exit(EXIT_FAILURE);
 	}
 	#ifdef debug
-		printf("\nServer listening for connections on %i\n", TC_PORT);
+		printf("[server.cpp:setup] Server listening for connections on %i\n", TC_PORT);
 	#endif /* debug */
 
 
 	if((tm_socket = accept(server_tm, (struct sockaddr *)&address_tm, (socklen_t*)&addrlen)) < 0)
 	{
-		perror("tm accept");
+		perror("[server.cpp:setup] tm accept:");
 		exit(EXIT_FAILURE);
 	}
 	else if(tm_socket != 0)
 	{
-		printf("Connection accepted on tm socket!\n");
+		printf("[server.cpp:setup] Connection accepted on tm socket!\n");
 	}
 	if((tc_socket = accept(server_tc, (struct sockaddr *)&address_tc, (socklen_t*)&addrlen)) < 0)
 	{
-		perror("tc accept");
+		perror("[server.cpp:setup] tc accept");
 		exit(EXIT_FAILURE);
 	}
 	else if(tc_socket != 0)
 	{
-		printf("Connection accepted on tc socket!\n");
+		printf("[server.cpp:setup] Connection accepted on tc socket!\n");
 	}
 
 	// Reading value from new_socket to buffer
 	valread = read(tc_socket, buffer, 1024);
-	// printing buffer
-	printf("Received TC message: %s\n", buffer);
-    uint8_t *buff_ptr = (uint8_t *)malloc(sizeof(buffer));      // might be unnecessary
-    memcpy(buff_ptr, &buffer, sizeof(buffer));                  // strlen might work also
-    // tmtc::decapsulate(buff_ptr, 0);
-	send(tm_socket, telem, strlen(telem), 0);
+    uint8_t *buff_ptr = (uint8_t *)malloc(sizeof(buffer));
+    memcpy(buff_ptr, &buffer, sizeof(buffer));
+
+
+    tmtc::decapsulate(buff_ptr, 0);
+
+    tmtc::encapsulate("TELEMETRY", strlen("TELEMETRY"));
+	// send(tm_socket, telem, strlen(telem), 0);
 	// send(new_socket, s_hello, strlen(hello), 0);
 
-	printf("Attempted to send: %s \n", telem);
+	// printf("Attempted to send: %s \n", telem);
 
 	return 0;
 }
-
+} /* server */
 
 

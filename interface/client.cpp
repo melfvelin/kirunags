@@ -1,23 +1,48 @@
-// This is the TCP/IP client
-// Client side C/C++ program to demonstrate Socket programming
-/* #include <stdio.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <unistd.h>
-#include <string>
-#include <cstring>
-#include "tables.h"
-
-#define TM_PORT 2001
-#define TC_PORT 2002
-#define DO_PORT 2007
-#define DE_PORT 2008 */
-
+/*  This is the TCP/IP client
+*   Client side C++ program to transmit and receive TC and TM frames
+*
+*
+*/
 #include "client.h"
 
 #ifndef debug
 #define debug
 #endif /* debug */
+
+namespace client{
+    /* *maleTC_Frame - creates a TC packet made of a TC_HEADER and a data field
+    *   input: payload data string and payload data size
+    *   output: pointer to TC packet in memory
+    *   returns uint8_t *tc_ptr
+    */
+    uint8_t *makeTC_frame(const char *message, uint32_t message_len)
+    {
+        
+        TC_HEADER tx_tc_frame;
+        tx_tc_frame.preamble = PREAMBLE;
+        uint32_t total_len = (sizeof(TC_HEADER) + message_len);
+        tx_tc_frame.total_len = total_len;
+        tx_tc_frame.tf_size = message_len;
+        
+        // allocate memory space for TC packet
+        uint8_t *tc_ptr = (uint8_t *)malloc(tx_tc_frame.total_len);
+        // copy TC header to allocated memory
+        if(memcpy(tc_ptr, &tx_tc_frame, sizeof(TC_HEADER)) == NULL)
+        {
+            std::cout << "memcpy returned empty address!" << std::endl;
+        }
+
+        // adding message after tc header
+        if(memcpy((tc_ptr + sizeof(TC_HEADER)), message, tx_tc_frame.tf_size) == NULL)
+        {
+            std::cout << "memcpy returned empty address!" << std::endl;
+        }
+
+        // return the pointer containing the adress to the constructed TC frame
+        return tc_ptr; 
+    }
+} /* client */
+
 
 int main(int argc, char const *argv[])
 {
@@ -59,7 +84,7 @@ int main(int argc, char const *argv[])
         return -1;
     }
 
-    if(inet_pton(AF_INET, "10.0.1.5", &tc_server.sin_addr)<=0)
+    if(inet_pton(AF_INET, "127.0.0.1", &tc_server.sin_addr)<=0)
     {
         printf("\nInvalid TC address/ Address not supported \n");
         return -1;
@@ -84,32 +109,21 @@ int main(int argc, char const *argv[])
         tc_ip = inet_ntoa(tc_server.sin_addr);
         printf("Client: attempting to connect on %s:%u\n", tc_ip, ntohs(tc_server.sin_port));
     #endif /* debug */
+    
+    
+    // for user input
+    // std::cin >> key_buffer;
+    // or hardcoded input:
+    char key_buffer[] = "This is a payload message";
 
-	if(1)
-	{
-		TC_HEADER tx_tc_frame;
-		tx_tc_frame.preamble = 0xA1B2C3D4;
-		const char message[] = "TC TEST MESSAGE";
-		uint32_t total_len = (sizeof(TC_HEADER) + sizeof(message));
-		tx_tc_frame.total_len = total_len;
-		tx_tc_frame.tf_size = sizeof(message);
-		// adding message after tc header
-		//memcpy((tx_tc_frame + sizeof(TC_HEADER)), &message, tx_tc_frame.tf_size);
-
-		uint8_t *tc_ptr = (uint8_t *)malloc(tx_tc_frame.total_len);
-		memcpy(tc_ptr, &tx_tc_frame, sizeof(TC_HEADER));
-		memcpy((tc_ptr + sizeof(TC_HEADER)), &message, tx_tc_frame.tf_size);
-		if(tmtc::decapsulate(tc_ptr, total_len) == 0)
-		{
-			std::cout << "Successfully decapsulated tc frame!" << std::endl;
-		}
-	}
-
-    // this is where we send
-    send(sock2, tc_ptr, total_len, 0);
-
-    printf("Attempted to send TC FRAME\n");
-    valread = read( sock , buffer, 1024);
-    printf("Received TM message: %s\n",buffer );
+    uint8_t *tc_ptr = client::makeTC_frame(key_buffer, strlen(key_buffer));
+    // char test[128];
+    // memcpy(&test, (tc_ptr + sizeof(TC_HEADER)), strlen("NEW MESSAGE"));
+    // std::cout << "test = " << test << std::endl;
+    send(sock2, tc_ptr, (sizeof(TC_HEADER) + strlen(key_buffer)), 0);
+    //printf("Attempted to send TC FRAME\n");
+    std::cout << "[client.cpp:main] Attempted to send TC: " << key_buffer << std::endl;
+    //valread = read( sock , buffer, 1024);
+    //printf("Received TM message: %s\n",buffer );
     return 0;
 }
