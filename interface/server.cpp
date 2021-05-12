@@ -167,8 +167,13 @@ int setup(void)
 
     tmtc::decapsulate(buff_ptr, 0);
 
-    tmtc::encapsulate("TELEMETRY", strlen("TELEMETRY"));
-	// send(tm_socket, telem, strlen(telem), 0);
+    char tm_buff[] = "12345678910";
+    uint8_t *tm_ptr = (uint8_t *)malloc(strlen(tm_buff) + 0 * sizeof(uint8_t));
+    // uint8_t *
+    tm_ptr = tmtc::encapsulate(tm_buff, (strlen(tm_buff)+0));
+    tmtc::parse_tm_header(tm_ptr);
+
+	send(tm_socket, tm_ptr, (sizeof(TM_HEADER) + strlen(tm_buff) + 0 + sizeof(POSTAMBLE)), 0);
 	// send(new_socket, s_hello, strlen(hello), 0);
 
 	// printf("Attempted to send: %s \n", telem);

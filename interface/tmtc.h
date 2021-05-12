@@ -17,7 +17,7 @@
 namespace tmtc
 {
 
-   	int encapsulate(const char *data, uint32_t data_size);
+   	uint8_t *encapsulate(const char *data, uint32_t data_size);
    	int decapsulate(uint8_t *tc_ptr, uint32_t data_size);
    	int parse_tm_header(uint8_t *frame_ptr);
  	  int extract_data(uint8_t *frame_ptr);

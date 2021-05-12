@@ -17,14 +17,18 @@ namespace tmtc
 	*	returns 0 at end of function
 	*	function calls: GenIRIGBTag() - generates time tag. parse_tm_header() - prints out packet header and data
 	*/	
-	int encapsulate(const char *data, uint32_t data_size)
+	uint8_t *encapsulate(const char *data, uint32_t data_size)
 	{
-		
+		std::cout << "[tmtc.cpp:encapsulate] Payload data before packing: " << data << std::endl;
+		std::cout << "[tmtc.cpp:encapsulate] Sizeof(data) = " << sizeof(data) << std::endl;
+		std::cout << "[tmtc.cpp:encapsulate] Strlen(data) = " << strlen(data) << std::endl;
+		std::cout << "[tmtc.cpp:encapsulate] data_size = " << data_size << std::endl;
+
 		TM_HEADER tm_header;
 		// preamble and postable are defined in tables.h
 		tm_header.preamble = PREAMBLE;
 		uint32_t postamble = POSTAMBLE;
-		uint32_t total_len = (sizeof(tm_header) + sizeof(data) + sizeof(postamble));
+		uint32_t total_len = (sizeof(tm_header) + data_size + sizeof(postamble));
 		tm_header.total_len = total_len;
 	 	tm_header.time_tag = GenIRIGBTag();
 		tm_header.scrambler = 0;
@@ -42,21 +46,21 @@ namespace tmtc
 		}
 
 		// next step is to copy the payload data into the memory following the header
-		if(memcpy(frame_ptr + sizeof(tm_header), &data, sizeof(data)) == NULL)
+		if(memcpy(frame_ptr + sizeof(tm_header), data, data_size) == NULL)
 		{
 			std::cout << "memcpy returned empty address!" << std::endl;	
 		}
 
 		// now we add the postamble after the data
-		if(memcpy(frame_ptr + sizeof(tm_header) + sizeof(data), &postamble, sizeof(postamble)) == NULL)
+		if(memcpy(frame_ptr + sizeof(tm_header) + strlen(data), &postamble, sizeof(postamble)) == NULL)
 		{
 			std::cout << "memcpy returned empty address!" << std::endl;
 		}
-
+		//std::cout << "[tmtc.cpp:encapsulate] Payload data after packing: " << data << std::endl;
 		// TM packet is constructed in memory, now we validate with parse_tm_header()
 		tmtc::parse_tm_header(frame_ptr);
-		free(frame_ptr);
-		return 0;
+		// free(frame_ptr);
+		return frame_ptr;
 	}
 
 	/*	parse_tm_header() - receives pointer to tm packet and prints out packet preamble, payload data and postamble
@@ -68,35 +72,39 @@ namespace tmtc
 	int parse_tm_header(uint8_t *frame_ptr)
 	{
 		// Init local TM_FRAME struct to put packet in
-		TM_FRAME tm_frame;
+		TM_HEADER tm_frame;
 		// copy data from address in frame_ptr to local struct for processing
-		if(memcpy(&tm_frame, frame_ptr, sizeof(TM_HEADER)) ==NULL)
+		if(memcpy(&tm_frame, frame_ptr, sizeof(TM_HEADER)) == NULL)
 		{
 			std::cout << "memcpy returned empty address!" << std::endl;	
 		}
 
-		// use TM_FRAME to print out parameters
-		std::cout << "Preamble: " << std::hex << (tm_frame.preamble & 0xFFFFFFFF) << std::endl;
-		std::cout << "Total length: " << std::dec << (tm_frame.total_len & 0xFFF) << std::endl;
-		std::cout << "Time tag: " << std::dec << tm_frame.time_tag << std::endl;
-		std::cout << "Scrambler: " << std::dec << (tm_frame.scrambler & 0x1) << std::endl;
-		std::cout << "Basis: " << std::dec << (tm_frame.basis & 0x1) << std::endl;
-		std::cout << "FEC: " << std::dec << (tm_frame.fec & 0xF) << std::endl;
-		std::cout << "Payload Length: " << std::dec << tm_frame.tf_size << std::endl;
+		// use TM_HEADER to print out parameters
+		std::cout << "[tmtc.cpp:parse_tm_header] Preamble: " << std::hex << (tm_frame.preamble & 0xFFFFFFFF) << std::endl;
+		std::cout << "[tmtc.cpp:parse_tm_header] Total length: " << std::dec << (tm_frame.total_len & 0xFFF) << std::endl;
+		std::cout << "[tmtc.cpp:parse_tm_header] Time tag: " << std::dec << tm_frame.time_tag << std::endl;
+		std::cout << "[tmtc.cpp:parse_tm_header] Scrambler: " << std::dec << (tm_frame.scrambler & 0x1) << std::endl;
+		std::cout << "[tmtc.cpp:parse_tm_header] Basis: " << std::dec << (tm_frame.basis & 0x1) << std::endl;
+		std::cout << "[tmtc.cpp:parse_tm_header] FEC: " << std::dec << (tm_frame.fec & 0xF) << std::endl;
+		std::cout << "[tmtc.cpp:parse_tm_header] Payload Length: " << std::dec << tm_frame.tf_size << std::endl;
 
 		// copy payload data from adress in frame_ptr to local struct for processing
-		if(memcpy(&tm_frame.data, (frame_ptr + 32), tm_frame.tf_size) ==NULL)
+		uint8_t *payload_ptr = (uint8_t *)malloc(tm_frame.tf_size);
+		//if(memcpy(&tm_frame.data, (frame_ptr + sizeof(TM_HEADER)), tm_frame.tf_size) ==NULL)
+		if(memcpy(payload_ptr, (frame_ptr + sizeof(TM_HEADER)), tm_frame.tf_size) ==NULL)
 		{
-			std::cout << "memcpy returned empty address!" << std::endl;
+			std::cout << "[tmtc.cpp:parse_tm_header] memcpy returned empty address!" << std::endl;
 		}
 		// print out data
-		std::cout << "Data is: " << tm_frame.data << std::endl;
+		payload_ptr[tm_frame.tf_size] = '\0';
+		std::cout << "[tmtc.cpp:parse_tm_header] Data is: " << payload_ptr << std::endl;
 		// copy postamble from adress in frame_ptr to local struct for processing
-		if(memcpy(&tm_frame.postamble, (frame_ptr +32 + tm_frame.tf_size), sizeof(uint32_t)) == NULL)
+		uint32_t postamble = 0;
+		if(memcpy(&postamble, (frame_ptr +sizeof(TM_HEADER) + tm_frame.tf_size), sizeof(uint32_t)) == NULL)
 		{
-			std::cout << "memcpy returned empty address!" << std::endl;
+			std::cout << "[tmtc.cpp:parse_tm_header] memcpy returned empty address!" << std::endl;
 		}
-
+		std::cout << "[tmtc.cpp:parse_tm_header] Postamble: " << std::hex << postamble << std::endl;
 		return 0;
 	}
 
