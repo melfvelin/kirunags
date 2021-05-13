@@ -19,10 +19,12 @@ namespace tmtc
 	*/	
 	uint8_t *encapsulate(const char *data, uint32_t data_size)
 	{
+		#ifdef debug
 		std::cout << "[tmtc.cpp:encapsulate] Payload data before packing: " << data << std::endl;
 		std::cout << "[tmtc.cpp:encapsulate] Sizeof(data) = " << sizeof(data) << std::endl;
 		std::cout << "[tmtc.cpp:encapsulate] Strlen(data) = " << strlen(data) << std::endl;
 		std::cout << "[tmtc.cpp:encapsulate] data_size = " << data_size << std::endl;
+		#endif /* debug */
 
 		TM_HEADER tm_header;
 		// preamble and postable are defined in tables.h
@@ -56,11 +58,29 @@ namespace tmtc
 		{
 			std::cout << "memcpy returned empty address!" << std::endl;
 		}
-		//std::cout << "[tmtc.cpp:encapsulate] Payload data after packing: " << data << std::endl;
-		// TM packet is constructed in memory, now we validate with parse_tm_header()
-		tmtc::parse_tm_header(frame_ptr);
-		// free(frame_ptr);
+	
 		return frame_ptr;
+	}
+
+	/*	decapsulate - decapsulates a TC packet and prints the payload data
+	*	in: uint8_t pointer to TC packet memory address, uint32_t data_size (not used)
+	*	out: prints out payload data from TC packet
+	*	returns 0
+	*/
+	int decapsulate(uint8_t *tc_ptr, uint32_t data_size)
+	{
+		// Init struct TC_HEADER locally
+		TC_HEADER tc_header;
+		// save TC header first
+		memcpy(&tc_header, tc_ptr, sizeof(TC_HEADER));
+		// use tf_size from TC header to malloc memory for payload
+		uint8_t *payload = (uint8_t *)malloc(tc_header.tf_size);
+		// copy data from TC pointer to payload
+		memcpy(payload, (tc_ptr + sizeof(TC_HEADER)), tc_header.tf_size);
+		// print payload
+		std::cout << "[tmtc.cpp:decapsulate] Payload: " << payload << std::endl;
+
+		return 0;
 	}
 
 	/*	parse_tm_header() - receives pointer to tm packet and prints out packet preamble, payload data and postamble
@@ -78,7 +98,6 @@ namespace tmtc
 		{
 			std::cout << "memcpy returned empty address!" << std::endl;	
 		}
-
 		// use TM_HEADER to print out parameters
 		std::cout << "[tmtc.cpp:parse_tm_header] Preamble: " << std::hex << (tm_frame.preamble & 0xFFFFFFFF) << std::endl;
 		std::cout << "[tmtc.cpp:parse_tm_header] Total length: " << std::dec << (tm_frame.total_len & 0xFFF) << std::endl;
@@ -87,17 +106,24 @@ namespace tmtc
 		std::cout << "[tmtc.cpp:parse_tm_header] Basis: " << std::dec << (tm_frame.basis & 0x1) << std::endl;
 		std::cout << "[tmtc.cpp:parse_tm_header] FEC: " << std::dec << (tm_frame.fec & 0xF) << std::endl;
 		std::cout << "[tmtc.cpp:parse_tm_header] Payload Length: " << std::dec << tm_frame.tf_size << std::endl;
-
 		// copy payload data from adress in frame_ptr to local struct for processing
 		uint8_t *payload_ptr = (uint8_t *)malloc(tm_frame.tf_size);
-		//if(memcpy(&tm_frame.data, (frame_ptr + sizeof(TM_HEADER)), tm_frame.tf_size) ==NULL)
 		if(memcpy(payload_ptr, (frame_ptr + sizeof(TM_HEADER)), tm_frame.tf_size) ==NULL)
 		{
 			std::cout << "[tmtc.cpp:parse_tm_header] memcpy returned empty address!" << std::endl;
 		}
-		// print out data
-		payload_ptr[tm_frame.tf_size] = '\0';
-		std::cout << "[tmtc.cpp:parse_tm_header] Data is: " << payload_ptr << std::endl;
+		// when sending payload as characters it can be necessary to add a trailing null char
+		// payload_ptr[tm_frame.tf_size] = '\0';
+		//std::cout << "[tmtc.cpp:parse_tm_header] Data is: " << payload_ptr << std::endl;
+
+		// with a for loop printing out data we avoid printing unwanted extra chars
+		std::cout << "[tmtc.cpp:parse_tm_header] Data is: ";
+		for(int i = 0; i < tm_frame.tf_size; i++)
+		{
+			std::cout << payload_ptr[i];
+		}
+		std::cout << "\n";
+
 		// copy postamble from adress in frame_ptr to local struct for processing
 		uint32_t postamble = 0;
 		if(memcpy(&postamble, (frame_ptr +sizeof(TM_HEADER) + tm_frame.tf_size), sizeof(uint32_t)) == NULL)
@@ -160,27 +186,6 @@ namespace tmtc
 	int BCDToDecimal(int bcd)
 	{
 		return (((bcd >> 4) * 10) + (bcd & 0xF));
-	}
-
-	/*	decapsulate - decapsulates a TC packet and prints the payload data
-	*	in: uint8_t pointer to TC packet memory address, uint32_t data_size (not used)
-	*	out:
-	*	author:
-	*/
-	int decapsulate(uint8_t *tc_ptr, uint32_t data_size)
-	{
-		// Init struct TC_HEADER locally
-		TC_HEADER tc_header;
-		// save TC header first
-		memcpy(&tc_header, tc_ptr, sizeof(TC_HEADER));
-		// use tf_size from TC header to malloc memory for payload
-		uint8_t *payload = (uint8_t *)malloc(tc_header.tf_size);
-		// copy data from TC pointer to payload
-		memcpy(payload, (tc_ptr + sizeof(TC_HEADER)), tc_header.tf_size);
-		// print payload
-		std::cout << "[tmtc.cpp:decapsulate] Payload: " << payload << std::endl;
-
-		return 0;
 	}
 
 	// not used
