@@ -118,7 +118,7 @@ int main(int argc, char const *argv[])
     // or hardcoded input:
     char key_buffer[] = "This is a payload message";
 
-    uint8_t *tc_ptr = client::makeTC_frame(key_buffer, strlen(key_buffer));
+    uint8_t *tc_ptr = tmtc::telecommand::encapsulate(key_buffer, strlen(key_buffer));
     // char test[128];
     // memcpy(&test, (tc_ptr + sizeof(TC_HEADER)), strlen("NEW MESSAGE"));
     // std::cout << "test = " << test << std::endl;
@@ -131,7 +131,7 @@ int main(int argc, char const *argv[])
     uint8_t *tm_ptr = (uint8_t *)malloc(valread * sizeof(uint8_t));
     
     memcpy(tm_ptr, &buffer, valread);
-    tmtc::parse_tm_header(tm_ptr);
+    tmtc::telemetry::decapsulate(tm_ptr);
     //printf("Received TM message: %s\n",buffer );
     return 0;
 }

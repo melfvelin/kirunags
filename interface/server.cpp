@@ -162,15 +162,15 @@ namespace server{
 	    memcpy(buff_ptr, &buffer, valread);
 
 
-	    tmtc::decapsulate(buff_ptr, 0);
+	    tmtc::telecommand::decapsulate(buff_ptr, 0);
 
 	    // sizeof = strlen + 1
 	    char tm_buff[] = "12345678910";
 
 	    uint8_t *tm_ptr = (uint8_t *)malloc(strlen(tm_buff) * sizeof(uint8_t));
 	    // uint8_t *
-	    tm_ptr = tmtc::encapsulate(tm_buff, (strlen(tm_buff)));
-	    tmtc::parse_tm_header(tm_ptr);
+	    tm_ptr = tmtc::telemetry::encapsulate(tm_buff, (strlen(tm_buff)));
+	    tmtc::telemetry::decapsulate(tm_ptr);
 
 		send(tm_socket, tm_ptr, (sizeof(TM_HEADER) + strlen(tm_buff) + sizeof(POSTAMBLE)), 0);
 
