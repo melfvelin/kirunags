@@ -4,6 +4,8 @@
 *
 */
 #include "client.h"
+#include "tmtc.h"
+#include "tables.h"
 
 #ifndef debug
 #define debug
@@ -116,14 +118,20 @@ int main(int argc, char const *argv[])
     // or hardcoded input:
     char key_buffer[] = "This is a payload message";
 
-    uint8_t *tc_ptr = client::makeTC_frame(key_buffer, strlen(key_buffer));
+    uint8_t *tc_ptr = tmtc::telecommand::encapsulate(key_buffer, strlen(key_buffer));
     // char test[128];
     // memcpy(&test, (tc_ptr + sizeof(TC_HEADER)), strlen("NEW MESSAGE"));
     // std::cout << "test = " << test << std::endl;
     send(sock2, tc_ptr, (sizeof(TC_HEADER) + strlen(key_buffer)), 0);
     //printf("Attempted to send TC FRAME\n");
     std::cout << "[client.cpp:main] Attempted to send TC: " << key_buffer << std::endl;
-    //valread = read( sock , buffer, 1024);
+    // read returns bytes read
+    valread = read(sock, buffer, 1024);
+    std::cout << "[client.cpp:main] received bytes: " << valread << std::endl;
+    uint8_t *tm_ptr = (uint8_t *)malloc(valread * sizeof(uint8_t));
+    
+    memcpy(tm_ptr, &buffer, valread);
+    tmtc::telemetry::decapsulate(tm_ptr);
     //printf("Received TM message: %s\n",buffer );
     return 0;
 }
