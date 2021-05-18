@@ -163,12 +163,8 @@ namespace server{
 
 
 	    tmtc::telecommand::decapsulate(buff_ptr, 0);
-
-	    // sizeof = strlen + 1
 	    char tm_buff[] = "12345678910";
-
 	    uint8_t *tm_ptr = (uint8_t *)malloc(strlen(tm_buff) * sizeof(uint8_t));
-	    // uint8_t *
 	    tm_ptr = tmtc::telemetry::encapsulate(tm_buff, (strlen(tm_buff)));
 	    tmtc::telemetry::decapsulate(tm_ptr);
 

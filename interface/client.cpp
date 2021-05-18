@@ -50,6 +50,9 @@ int main(int argc, char const *argv[])
 {
     int sock = 0, valread;
     int sock2 = 0;
+    char tc_address[16] = {0};
+    char tm_address[16] = {0};
+    int tc_port = 0;
     struct sockaddr_in serv_addr;
     struct sockaddr_in tm_server;
     struct sockaddr_in tc_server;
@@ -77,16 +80,29 @@ int main(int argc, char const *argv[])
     tm_server.sin_port = htons(TM_PORT);
 
     tc_server.sin_family = AF_INET;
-    tc_server.sin_port = htons(TC_PORT);
+    //tc_server.sin_port = htons(TC_PORT);
+
+    // To be continued
+    std::cout << "Please input what port to connect to (2001 for TM or 52001 for GRC)" << std::endl;
+    std:cin >> tc_port;
+    std::cout << "Port: " << tc_port << std::endl;
+    tc_server.sin_port = htons(tc_port);
+
+    std::cout << "Please input ipv4 address to connect to TM port: " << std::endl;
+    std::cin >> tm_address;
 
     // Convert IPv4 and IPv6 addresses from text to binary form
-    if(inet_pton(AF_INET, "127.0.0.1", &tm_server.sin_addr)<=0)
+    if(inet_pton(AF_INET, tm_address, &tm_server.sin_addr)<=0)
     {
         printf("\nInvalid TM address/ Addrescis not supported \n");
         return -1;
     }
 
-    if(inet_pton(AF_INET, "127.0.0.1", &tc_server.sin_addr)<=0)
+    
+    std::cout << "Please input ipv4 address to connect to TC port: " << std::endl;
+    std::cin >> tc_address;
+
+    if(inet_pton(AF_INET, tc_address, &tc_server.sin_addr)<=0)
     {
         printf("\nInvalid TC address/ Address not supported \n");
         return -1;
@@ -116,7 +132,9 @@ int main(int argc, char const *argv[])
     // for user input
     // std::cin >> key_buffer;
     // or hardcoded input:
-    char key_buffer[] = "This is a payload message";
+    char key_buffer[128] = {0};
+    std::cout << "Please enter telecommand: " << std::endl;
+    std::cin >> key_buffer;
 
     uint8_t *tc_ptr = tmtc::telecommand::encapsulate(key_buffer, strlen(key_buffer));
     // char test[128];
