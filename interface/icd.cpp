@@ -22,6 +22,9 @@ typedef struct __attribute__ ((packed)) _TC_HEADER {
             uint32_t tf_size;        /* Transfer frame size */
         } TC_HEADER;
 
+/*	This is an example to learn how to pass data as pointers
+*	to functions
+*/
 int print_tc_header(TC_HEADER *ptr)
 {
 	printf("From print: %x\n", ptr->preamble);	

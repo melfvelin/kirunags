@@ -43,7 +43,70 @@ namespace client{
         // return the pointer containing the adress to the constructed TC frame
         return tc_ptr; 
     }
+
+    void grc_connect(void)
+    {
+
+    int sock = 0; 
+    int valread;
+    struct sockaddr_in grc_addr;
+    char buffer[1024] = {0};
+
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        printf("\n Socket creation error \n");
+        return;
+    }
+
+    grc_addr.sin_family = AF_INET;
+    grc_addr.sin_port = htons(52001);
+    
+
+    // Convert IPv4 and IPv6 addresses from text to binary form
+    if(inet_pton(AF_INET, "127.0.0.1", &grc_addr.sin_addr)<=0)
+    {
+        printf("\nInvalid TM address/ Addrescis not supported \n");
+        return;
+    }
+   
+    if (connect(sock, (struct sockaddr *)&grc_addr, sizeof(grc_addr)) < 0)
+    {
+        printf("\nGRC Connection Failed \n");
+        return;
+    }
+    #ifdef debug
+    
+    #endif /* debug */
+
+    // or hardcoded input:
+    
+
+    // For bits
+    char byte[1024];
+    for(int i = 0; i <= 1023; i++)
+    {
+        byte[i] = 0b00100100;
+    }
+    uint8_t *test_ptr = (uint8_t *)malloc(1024);
+    memcpy(test_ptr, &byte, 1024);
+    send(sock, test_ptr, 1024, 0);
+
+    // For char arrays
+    /*
+    char key_buffer[128] = {0};
+    std::cout << "Please enter telecommand: " << std::endl;
+    std::cin >> key_buffer;
+    uint8_t *tc_ptr = tmtc::telecommand::encapsulate(key_buffer, strlen(key_buffer));
+    send(sock, tc_ptr, (sizeof(TC_HEADER) + strlen(key_buffer)), 0);
+    */
+    
+    std::cout << "[client.cpp:main] Attempted to send TC: " << std::endl;
+
+    return;
+    }
 } /* client */
+
+
 
 
 int main(int argc, char const *argv[])
@@ -61,6 +124,13 @@ int main(int argc, char const *argv[])
     char buffer[1024] = {0};
     char *tc_ip;
     char *tm_ip;
+
+    if(1)
+    {
+        std::cout << "Connecting to GRC" << std::endl;
+        client::grc_connect();
+        return 0;
+    }
 
     if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
@@ -84,7 +154,7 @@ int main(int argc, char const *argv[])
 
     // To be continued
     std::cout << "Please input what port to connect to (2001 for TM or 52001 for GRC)" << std::endl;
-    std:cin >> tc_port;
+    std::cin >> tc_port;
     std::cout << "Port: " << tc_port << std::endl;
     tc_server.sin_port = htons(tc_port);
 
