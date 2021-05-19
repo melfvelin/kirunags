@@ -33,6 +33,7 @@ import signal
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
+import epy_block_0
 from gnuradio import qtgui
 
 class tcp_test(gr.top_block, Qt.QWidget):
@@ -123,6 +124,7 @@ class tcp_test(gr.top_block, Qt.QWidget):
 
         self._qtgui_time_sink_x_1_win = sip.wrapinstance(self.qtgui_time_sink_x_1.pyqwidget(), Qt.QWidget)
         self.top_grid_layout.addWidget(self._qtgui_time_sink_x_1_win)
+        self.epy_block_0 = epy_block_0.python_debugger()
         self.blocks_throttle_1 = blocks.throttle(gr.sizeof_float*1, samp_rate,True)
         self.blocks_socket_pdu_0 = blocks.socket_pdu('TCP_SERVER', 'localhost', '52001', 10000, False)
         self.blocks_repeat_0 = blocks.repeat(gr.sizeof_char*1, 100)
@@ -138,6 +140,7 @@ class tcp_test(gr.top_block, Qt.QWidget):
         self.msg_connect((self.blocks_socket_pdu_0, 'pdus'), (self.blocks_pdu_to_tagged_stream_0, 'pdus'))
         self.connect((self.blocks_char_to_float_0, 0), (self.blocks_throttle_1, 0))
         self.connect((self.blocks_pdu_to_tagged_stream_0, 0), (self.blocks_repack_bits_bb_0, 0))
+        self.connect((self.blocks_pdu_to_tagged_stream_0, 0), (self.epy_block_0, 0))
         self.connect((self.blocks_repack_bits_bb_0, 0), (self.blocks_repeat_0, 0))
         self.connect((self.blocks_repeat_0, 0), (self.blocks_char_to_float_0, 0))
         self.connect((self.blocks_throttle_1, 0), (self.qtgui_time_sink_x_1, 0))

@@ -37,6 +37,9 @@ import signal
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
+import epy_block_0
+import epy_block_0_0
+import epy_block_0_0_0
 from gnuradio import qtgui
 
 class gfsk_validation(gr.top_block, Qt.QWidget):
@@ -303,17 +306,18 @@ class gfsk_validation(gr.top_block, Qt.QWidget):
         self._qtgui_freq_sink_x_0_win = sip.wrapinstance(self.qtgui_freq_sink_x_0.pyqwidget(), Qt.QWidget)
         self.top_grid_layout.addWidget(self._qtgui_freq_sink_x_0_win)
         self.freq_xlating_fir_filter_xxx_0 = filter.freq_xlating_fir_filter_fcf(1, firdes.low_pass(1.0,samp_rate,900,200), 1500, samp_rate)
+        self.epy_block_0_0_0 = epy_block_0_0_0.python_debugger()
+        self.epy_block_0_0 = epy_block_0_0.python_debugger()
+        self.epy_block_0 = epy_block_0.python_debugger()
         self.digital_binary_slicer_fb_0 = digital.binary_slicer_fb()
         self.blocks_throttle_0 = blocks.throttle(gr.sizeof_float*1, samp_rate,True)
         self.blocks_sub_xx_0 = blocks.sub_ff(1)
         self.blocks_socket_pdu_0 = blocks.socket_pdu('TCP_SERVER', 'localhost', '52001', 10000, False)
-        self.blocks_repeat_0 = blocks.repeat(gr.sizeof_char*1, 100)
+        self.blocks_repeat_0 = blocks.repeat(gr.sizeof_char*1, 5)
         self.blocks_repack_bits_bb_0 = blocks.repack_bits_bb(8, 1, "", False, gr.GR_LSB_FIRST)
         self.blocks_pdu_to_tagged_stream_0 = blocks.pdu_to_tagged_stream(blocks.byte_t, 'packet_len')
         self.blocks_multiply_xx_1 = blocks.multiply_vff(1)
         self.blocks_multiply_xx_0 = blocks.multiply_vff(1)
-        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_char*1, '/home/martin/kirunags/received_bits', False)
-        self.blocks_file_sink_0.set_unbuffered(False)
         self.blocks_char_to_float_1 = blocks.char_to_float(1, 1)
         self.blocks_char_to_float_0 = blocks.char_to_float(1, 1)
         self.blocks_add_xx_0 = blocks.add_vff(1)
@@ -340,14 +344,16 @@ class gfsk_validation(gr.top_block, Qt.QWidget):
         self.connect((self.blocks_multiply_xx_0, 0), (self.blocks_add_xx_0, 0))
         self.connect((self.blocks_multiply_xx_1, 0), (self.blocks_add_xx_0, 1))
         self.connect((self.blocks_pdu_to_tagged_stream_0, 0), (self.blocks_repack_bits_bb_0, 0))
+        self.connect((self.blocks_pdu_to_tagged_stream_0, 0), (self.epy_block_0, 0))
         self.connect((self.blocks_repack_bits_bb_0, 0), (self.blocks_repeat_0, 0))
+        self.connect((self.blocks_repack_bits_bb_0, 0), (self.epy_block_0_0, 0))
         self.connect((self.blocks_repeat_0, 0), (self.blocks_char_to_float_0, 0))
         self.connect((self.blocks_sub_xx_0, 0), (self.blocks_multiply_xx_1, 0))
         self.connect((self.blocks_throttle_0, 0), (self.freq_xlating_fir_filter_xxx_0, 0))
         self.connect((self.blocks_throttle_0, 0), (self.qtgui_freq_sink_x_0, 0))
         self.connect((self.blocks_throttle_0, 0), (self.qtgui_time_sink_x_0, 0))
         self.connect((self.digital_binary_slicer_fb_0, 0), (self.blocks_char_to_float_1, 0))
-        self.connect((self.digital_binary_slicer_fb_0, 0), (self.blocks_file_sink_0, 0))
+        self.connect((self.digital_binary_slicer_fb_0, 0), (self.epy_block_0_0_0, 0))
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.analog_quadrature_demod_cf_0, 0))
         self.connect((self.freq_xlating_fir_filter_xxx_0, 0), (self.qtgui_freq_sink_x_1, 0))
 

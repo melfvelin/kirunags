@@ -82,14 +82,15 @@ namespace client{
     
 
     // For bits
-    char byte[1024];
-    for(int i = 0; i <= 1023; i++)
+    int size = 2;
+    char byte[size];
+    for(int i = 0; i < size; i++)
     {
         byte[i] = 0b00100100;
     }
-    uint8_t *test_ptr = (uint8_t *)malloc(1024);
-    memcpy(test_ptr, &byte, 1024);
-    send(sock, test_ptr, 1024, 0);
+    uint8_t *test_ptr = (uint8_t *)malloc(size);
+    memcpy(test_ptr, &byte, size);
+    send(sock, test_ptr, size, 0);
 
     // For char arrays
     /*

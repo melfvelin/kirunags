@@ -153,7 +153,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [245, 228]
+    coordinate: [305, 217]
     rotation: 0
     state: true
 - name: blocks_char_to_float_1
@@ -171,24 +171,6 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [1266, 477]
-    rotation: 0
-    state: true
-- name: blocks_file_sink_0
-  id: blocks_file_sink
-  parameters:
-    affinity: ''
-    alias: ''
-    append: 'False'
-    comment: ''
-    file: /home/martin/kirunags/received_bits
-    type: byte
-    unbuffered: 'False'
-    vlen: '1'
-  states:
-    bus_sink: false
-    bus_source: false
-    bus_structure: null
-    coordinate: [1171, 605]
     rotation: 0
     state: true
 - name: blocks_multiply_xx_0
@@ -270,7 +252,7 @@ blocks:
     affinity: ''
     alias: ''
     comment: ''
-    interp: '100'
+    interp: '5'
     maxoutbuf: '0'
     minoutbuf: '0'
     type: byte
@@ -281,7 +263,7 @@ blocks:
     bus_structure: null
     coordinate: [189, 334]
     rotation: 0
-    state: true
+    state: enabled
 - name: blocks_socket_pdu_0
   id: blocks_socket_pdu
   parameters:
@@ -352,6 +334,102 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [1032, 461]
+    rotation: 0
+    state: true
+- name: epy_block_0
+  id: epy_block
+  parameters:
+    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
+      from gnuradio import gr\n\n\nclass python_debugger(gr.basic_block):  # other\
+      \ base classes are basic_block, decim_block, interp_block\n    \"\"\"Embedded\
+      \ Python Block example - a simple multiply const\"\"\"\n\n    def __init__(self):\
+      \  # only default arguments here\n        \"\"\"arguments to this function show\
+      \ up as parameters in GRC\"\"\"\n        gr.basic_block.__init__(\n        \
+      \    self,\n            name='Python Byte Debugger',   # will show up in GRC\n\
+      \            in_sig=[(np.int8)],\n            out_sig=None\n        )\n\n  \
+      \  def general_work(self, input_items, output_items):\n        \"\"\"example:\
+      \ multiply with constant\"\"\"\n        in0=input_items[0]\n        print(\"\
+      \\nTagged Stream Byte debug:\\n\"+str(in0))\n        self.consume(0, len(in0))\n\
+      \        return len(in0)\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('Python Byte Debugger', 'python_debugger', [], [('0', 'byte', 1)],
+      [], 'Embedded Python Block example - a simple multiply const', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [144, 704]
+    rotation: 0
+    state: true
+- name: epy_block_0_0
+  id: epy_block
+  parameters:
+    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
+      from gnuradio import gr\n\n\nclass python_debugger(gr.basic_block):  # other\
+      \ base classes are basic_block, decim_block, interp_block\n    \"\"\"Embedded\
+      \ Python Block example - a simple multiply const\"\"\"\n\n    def __init__(self):\
+      \  # only default arguments here\n        \"\"\"arguments to this function show\
+      \ up as parameters in GRC\"\"\"\n        gr.basic_block.__init__(\n        \
+      \    self,\n            name='Python Byte Debugger',   # will show up in GRC\n\
+      \            in_sig=[(np.int8)],\n            out_sig=None\n        )\n\n  \
+      \  def general_work(self, input_items, output_items):\n        \"\"\"example:\
+      \ multiply with constant\"\"\"\n        in0=input_items[0]\n        print(\"\
+      \\nRepack Bits Byte debug:\\n\"+str(in0))\n        self.consume(0, len(in0))\n\
+      \        return len(in0)\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('Python Byte Debugger', 'python_debugger', [], [('0', 'byte', 1)],
+      [], 'Embedded Python Block example - a simple multiply const', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [396, 702]
+    rotation: 0
+    state: true
+- name: epy_block_0_0_0
+  id: epy_block
+  parameters:
+    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
+      from gnuradio import gr\n\n\nclass python_debugger(gr.basic_block):  # other\
+      \ base classes are basic_block, decim_block, interp_block\n    \"\"\"Embedded\
+      \ Python Block example - a simple multiply const\"\"\"\n\n    def __init__(self):\
+      \  # only default arguments here\n        \"\"\"arguments to this function show\
+      \ up as parameters in GRC\"\"\"\n        gr.basic_block.__init__(\n        \
+      \    self,\n            name='Python Byte Debugger',   # will show up in GRC\n\
+      \            in_sig=[(np.int8)],\n            out_sig=None\n        )\n\n  \
+      \  def general_work(self, input_items, output_items):\n        \"\"\"example:\
+      \ multiply with constant\"\"\"\n        in0=input_items[0]\n        print(\"\
+      \\nBinary Slicer Repack Bits Byte debug:\\n\"+str(in0))\n        self.consume(0,\
+      \ len(in0))\n        return len(in0)\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('Python Byte Debugger', 'python_debugger', [], [('0', 'byte', 1)],
+      [], 'Embedded Python Block example - a simple multiply const', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [1070, 562]
     rotation: 0
     state: true
 - name: freq_xlating_fir_filter_xxx_0
@@ -865,7 +943,9 @@ connections:
 - [blocks_multiply_xx_0, '0', blocks_add_xx_0, '0']
 - [blocks_multiply_xx_1, '0', blocks_add_xx_0, '1']
 - [blocks_pdu_to_tagged_stream_0, '0', blocks_repack_bits_bb_0, '0']
+- [blocks_pdu_to_tagged_stream_0, '0', epy_block_0, '0']
 - [blocks_repack_bits_bb_0, '0', blocks_repeat_0, '0']
+- [blocks_repack_bits_bb_0, '0', epy_block_0_0, '0']
 - [blocks_repeat_0, '0', blocks_char_to_float_0, '0']
 - [blocks_socket_pdu_0, pdus, blocks_pdu_to_tagged_stream_0, pdus]
 - [blocks_sub_xx_0, '0', blocks_multiply_xx_1, '0']
@@ -873,7 +953,7 @@ connections:
 - [blocks_throttle_0, '0', qtgui_freq_sink_x_0, '0']
 - [blocks_throttle_0, '0', qtgui_time_sink_x_0, '0']
 - [digital_binary_slicer_fb_0, '0', blocks_char_to_float_1, '0']
-- [digital_binary_slicer_fb_0, '0', blocks_file_sink_0, '0']
+- [digital_binary_slicer_fb_0, '0', epy_block_0_0_0, '0']
 - [freq_xlating_fir_filter_xxx_0, '0', qtgui_freq_sink_x_1, '0']
 - [freq_xlating_fir_filter_xxx_0, '0', virtual_sink_0, '0']
 - [virtual_source_0, '0', analog_quadrature_demod_cf_0, '0']

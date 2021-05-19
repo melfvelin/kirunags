@@ -58,7 +58,7 @@ blocks:
     bus_sink: false
     bus_source: false
     bus_structure: null
-    coordinate: [1029, 118]
+    coordinate: [1026, 125]
     rotation: 0
     state: true
 - name: blocks_pdu_to_tagged_stream_0
@@ -153,6 +153,70 @@ blocks:
     bus_source: false
     bus_structure: null
     coordinate: [1037, 212]
+    rotation: 0
+    state: enabled
+- name: epy_block_0
+  id: epy_block
+  parameters:
+    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
+      from gnuradio import gr\n\n\nclass python_debugger(gr.basic_block):  # other\
+      \ base classes are basic_block, decim_block, interp_block\n    \"\"\"Embedded\
+      \ Python Block example - a simple multiply const\"\"\"\n\n    def __init__(self):\
+      \  # only default arguments here\n        \"\"\"arguments to this function show\
+      \ up as parameters in GRC\"\"\"\n        gr.basic_block.__init__(\n        \
+      \    self,\n            name='Python Byte Debugger',   # will show up in GRC\n\
+      \            in_sig=[(np.int8)],\n            out_sig=None\n        )\n\n  \
+      \  def general_work(self, input_items, output_items):\n        \"\"\"example:\
+      \ multiply with constant\"\"\"\n        in0=input_items[0]\n        print(\"\
+      \\nTagged Stream Byte debug:\\n\"+str(in0))\n        self.consume(0, len(in0))\n\
+      \        return len(in0)\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('Python Byte Debugger', 'python_debugger', [], [('0', 'byte', 1)],
+      [], 'Embedded Python Block example - a simple multiply const', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [518, 220]
+    rotation: 0
+    state: true
+- name: epy_block_0_0
+  id: epy_block
+  parameters:
+    _source_code: "\"\"\"\nEmbedded Python Blocks:\n\nEach time this file is saved,\
+      \ GRC will instantiate the first class it finds\nto get ports and parameters\
+      \ of your block. The arguments to __init__  will\nbe the parameters. All of\
+      \ them are required to have default values!\n\"\"\"\n\nimport numpy as np\n\
+      from gnuradio import gr\n\n\nclass python_debugger(gr.basic_block):  # other\
+      \ base classes are basic_block, decim_block, interp_block\n    \"\"\"Embedded\
+      \ Python Block example - a simple multiply const\"\"\"\n\n    def __init__(self):\
+      \  # only default arguments here\n        \"\"\"arguments to this function show\
+      \ up as parameters in GRC\"\"\"\n        gr.basic_block.__init__(\n        \
+      \    self,\n            name='Python Byte Debugger',   # will show up in GRC\n\
+      \            in_sig=[(np.int8)],\n            out_sig=None\n        )\n\n  \
+      \  def general_work(self, input_items, output_items):\n        \"\"\"example:\
+      \ multiply with constant\"\"\"\n        in0=input_items[0]\n        print(\"\
+      \\nRepack Bits (2) Byte debug:\\n\"+str(in0))\n        self.consume(0, len(in0))\n\
+      \        return len(in0)\n"
+    affinity: ''
+    alias: ''
+    comment: ''
+    maxoutbuf: '0'
+    minoutbuf: '0'
+  states:
+    _io_cache: ('Python Byte Debugger', 'python_debugger', [], [('0', 'byte', 1)],
+      [], 'Embedded Python Block example - a simple multiply const', [])
+    bus_sink: false
+    bus_source: false
+    bus_structure: null
+    coordinate: [784, 224]
     rotation: 0
     state: enabled
 - name: qtgui_time_sink_x_1
@@ -256,7 +320,9 @@ blocks:
 connections:
 - [blocks_char_to_float_0, '0', blocks_throttle_1, '0']
 - [blocks_pdu_to_tagged_stream_0, '0', blocks_repack_bits_bb_0, '0']
+- [blocks_pdu_to_tagged_stream_0, '0', epy_block_0, '0']
 - [blocks_repack_bits_bb_0, '0', blocks_repeat_0, '0']
+- [blocks_repack_bits_bb_0, '0', epy_block_0_0, '0']
 - [blocks_repeat_0, '0', blocks_char_to_float_0, '0']
 - [blocks_socket_pdu_0, pdus, blocks_pdu_to_tagged_stream_0, pdus]
 - [blocks_throttle_1, '0', qtgui_time_sink_x_1, '0']
