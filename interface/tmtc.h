@@ -38,6 +38,8 @@ namespace tmtc
    		//uint8_t *encapsulate(const char *message, uint32_t message_len);	
    		//int decapsulate(uint8_t *tc_ptr, uint32_t data_size);
    	}
+
+      static std::string toBinaryString(const uint8_t& x);
   }
 
 

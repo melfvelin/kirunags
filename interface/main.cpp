@@ -16,7 +16,6 @@ int main()
 	uint8_t nInData[nDataSize];
 	uint8_t nOutData[nDataSize];
 	nInData[0] = 'A';
-
 	std::cout << "Sending TM: " << nInData[0] << std::endl;
 	tmtc::telemetry::EncapsulateTM(pnPacket, 0, 0, 0, 3, nDataSize, nInData);
 

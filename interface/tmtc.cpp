@@ -9,6 +9,7 @@
 #include "tables.h"
 #include <bitset>
 #include <iostream>
+#include <stringstream>
 
 
 namespace tmtc
@@ -152,6 +153,13 @@ namespace tmtc
 		}
 		
 	} /* telecommand */
+
+	static std::string toBinaryString(const uint8_t& x)
+	{
+	    std::stringstream ss;
+	    ss << std::bitset<sizeof(uint8_t) * 8>(x);
+	    return ss.str();
+	}
 }	/* tmtc */
 
 
