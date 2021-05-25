@@ -9,7 +9,6 @@
 #include "tables.h"
 #include <bitset>
 #include <iostream>
-#include <stringstream>
 
 
 namespace tmtc
@@ -47,13 +46,13 @@ namespace tmtc
 			// Copy TM header to local struct
 			memcpy(&m_sTMheader, pnPacket, sizeof(TM_HEADER));
 
-			nMsglen = m_sTMheader.nMsglen;
-			nTimeTag = m_sTMheader.nTimeTag;
-			nMsgType = m_sTMheader.nMsgType;
-			nScrambler = m_sTMheader.nScrambler;
-			nFEC = m_sTMheader.nFEC;
-			nFrameFormat = m_sTMheader.nFrameFormat;
-			nCaduSize = m_sTMheader.nCaduSize;
+			nMsglen = (m_sTMheader.nMsglen & 0x3FF);
+			nTimeTag = (m_sTMheader.nTimeTag);
+			nMsgType = (m_sTMheader.nMsgType & 0x1);
+			nScrambler = (m_sTMheader.nScrambler & 0x1);
+			nFEC = (m_sTMheader.nFEC & 0XF);
+			nFrameFormat = (m_sTMheader.nFrameFormat & 0x7);
+			nCaduSize = (m_sTMheader.nCaduSize & 0x3FF);
 			// copy data to local address pointed to by pnData using CADU Size
 			memcpy(pnData, (pnPacket + sizeof(TM_HEADER)) , m_sTMheader.nCaduSize);
 			return;
