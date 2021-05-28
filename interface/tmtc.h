@@ -19,7 +19,7 @@ namespace tmtc
 
    	namespace telemetry
    	{
-         void EncapsulateTM(uint8_t *rnOut, uint32_t nMsgType, uint32_t nScrambler, uint32_t nFEC, 
+         void EncapsulateTM(uint8_t *rnOut, uint32_t nScrambler, uint32_t nFEC, 
          uint32_t nFrameFormat, uint32_t nCaduSize, uint8_t *rnData);
          void DecapsulateTM(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType,
          uint32_t& nScrambler, uint32_t& nFEC, uint32_t& nFrameFormat, uint32_t& nCaduSize, uint8_t *pnData);
@@ -32,12 +32,30 @@ namespace tmtc
    	
    	namespace telecommand
    	{ 
-         void EncapsulateTC(uint8_t *pnOut, uint32_t nMsgType, uint32_t nCltuSize, uint8_t *pnData);
+         void EncapsulateTC(uint8_t *pnOut, uint32_t nCltuSize, uint8_t *pnData);
          void DecapsulateTC(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType,
          uint32_t& nCltuSize, uint8_t *pnData);
    		//uint8_t *encapsulate(const char *message, uint32_t message_len);	
    		//int decapsulate(uint8_t *tc_ptr, uint32_t data_size);
    	}
+
+      void EncapsulateTrack(uint8_t *pnOut, uint32_t nPayloadSize, uint8_t *pnPayload);
+      void DecapsulateTrack(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType, uint8_t *pnPayload);
+      void EncapsulateAntenna(uint8_t *pnOut, float fSatID, float fAzimuth, float fElevation);
+      void DecapsulateAntenna(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType, float& fSatID, float& fAzimuth, float& fElevation);
+      void EncapsulateDoppler(uint8_t *pnOut, float fSatID, float fRxFreq, float fRxDoppler, float fTxFreq, float fTxDoppler);
+      void DecapsulateDoppler(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType, float& fSatID,
+      float& fRxFreq, float& fRxDoppler, float& fTxFreq, float& fTxDoppler);
+      void EncapsulateDecoder(uint8_t *pnOut, uint32_t nPayloadLen, uint8_t *pnPayload);
+      void DecapsulateDecoder(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nPayloadLen, uint8_t *pnPayload);
+
+      namespace parse
+      {
+         std::string ParseMsgType(uint32_t& nMsgType);
+         std::string ParseScrambler(uint32_t& nScrambler);
+         std::string ParseFEC(uint32_t& nFEC);
+         std::string ParseFrameFormat(uint32_t& nFrameFormat);
+      }
   }
 
 
