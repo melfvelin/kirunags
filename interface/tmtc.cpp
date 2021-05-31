@@ -7,113 +7,59 @@
 #include "server.h"
 #include "tmtc.h"
 #include "tables.h"
+#include <bitset>
+#include <iostream>
+#include <iomanip>
+#include <string>
 
 
 namespace tmtc
 {
 	namespace telemetry
 	{
-			/*	encapsulate() - creates a TM network packet made up of a TM header, payload data and postamble
-		*	in: const char pointer to payload data, 32-bit unsigned data size
-		*	out: uintb_t pointer to TM network packet sent to parse function
-		*	returns 0 at end of function
-		*	function calls: GenIRIGBTag() - generates time tag. parse_tm_header() - prints out packet header and data
-		*/	
-		uint8_t *encapsulate(const char *message, uint32_t message_len)
+		void EncapsulateTM(uint8_t *pnOut, uint32_t nScrambler, uint32_t nFEC, 
+			uint32_t nFrameFormat, uint32_t nCaduSize, uint8_t *pnData)
 		{
-			#ifdef debug
-			std::cout << "[tmtc.cpp:encapsulate] Payload data before packing: " << message << std::endl;
-			std::cout << "[tmtc.cpp:encapsulate] Sizeof(data) = " << sizeof(message) << std::endl;
-			std::cout << "[tmtc.cpp:encapsulate] Strlen(data) = " << strlen(message) << std::endl;
-			std::cout << "[tmtc.cpp:encapsulate] data_size = " << message_len << std::endl;
-			#endif /* debug */
+			// Local variables: Preamble, Postamble, TimeTag add m_ to all locals
+			TM_HEADER sTMheader;
 
-			TM_HEADER tm_header;
-			// preamble and postable are defined in tables.h
-			tm_header.preamble = PREAMBLE;
-			uint32_t postamble = POSTAMBLE;
-			uint32_t total_len = (sizeof(tm_header) + message_len + sizeof(postamble));
-			tm_header.total_len = total_len;
-		 	tm_header.time_tag = GenIRIGBTag();
-			tm_header.scrambler = 0;
-			tm_header.basis = 0;
-			tm_header.fec = 1;
-			tm_header.tf_size = message_len;
+			sTMheader.nPreamble = PREAMBLE;		// PREAMBLE defined in tables.h
+			sTMheader.nMsgType = 0;
+			sTMheader.nScrambler = nScrambler;
+			sTMheader.nFEC = nFEC;
+			sTMheader.nFrameFormat = nFrameFormat;
+			sTMheader.nCaduSize = nCaduSize;
+			sTMheader.nMsglen = sizeof(TM_HEADER) + nCaduSize + sizeof(uint32_t);
+			sTMheader.nTimeTag = tmtc::telemetry::GenIRIGBTag();
 
-			// create 8-bit pointer to allocated memory
-			uint8_t *frame_ptr = (uint8_t*)malloc(total_len * sizeof(uint8_t));
+			// copies tm header to output ref/ptr
+			memcpy(pnOut, &sTMheader, sizeof(TM_HEADER));
+			// copies data from input reference to output reference
+			memcpy((pnOut + sizeof(TM_HEADER)), pnData, nCaduSize);
+			// copies postable from local variable to output reference
+			memcpy(pnOut + sizeof(TM_HEADER) + nCaduSize, &sTMheader.nPreamble, sizeof(uint32_t));
+			return;
+		}
 
-			// put tm_header in allocated memory 
-			if(memcpy(frame_ptr, &tm_header, sizeof(tm_header)) == NULL)
-			{
-				std::cout << "memcpy returned empty address!" << std::endl;
-			}
+		void DecapsulateTM(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType,
+			uint32_t& nScrambler, uint32_t& nFEC, uint32_t& nFrameFormat, uint32_t& nCaduSize, uint8_t *pnData)
+		{
+			TM_HEADER m_sTMheader;
+			// Copy TM header to local struct
+			memcpy(&m_sTMheader, pnPacket, sizeof(TM_HEADER));
 
-			// next step is to copy the payload data into the memory following the header
-			if(memcpy(frame_ptr + sizeof(tm_header), message, message_len) == NULL)
-			{
-				std::cout << "memcpy returned empty address!" << std::endl;	
-			}
-
-			// now we add the postamble after the data
-			if(memcpy(frame_ptr + sizeof(tm_header) + message_len, &postamble, sizeof(postamble)) == NULL)
-			{
-				std::cout << "memcpy returned empty address!" << std::endl;
-			}
+			nMsglen = (m_sTMheader.nMsglen & 0x3FF);
+			nTimeTag = (m_sTMheader.nTimeTag);
+			nMsgType = (m_sTMheader.nMsgType & 0x3);
+			nScrambler = (m_sTMheader.nScrambler & 0x1);
+			nFEC = (m_sTMheader.nFEC & 0XF);
+			nFrameFormat = (m_sTMheader.nFrameFormat & 0x7);
+			nCaduSize = (m_sTMheader.nCaduSize & 0x3FF);
+			// copy data to local address pointed to by pnData using CADU Size
+			memcpy(pnData, (pnPacket + sizeof(TM_HEADER)) , m_sTMheader.nCaduSize);
+			return;
+		}
 		
-			return frame_ptr;
-		}
-
-		/*	decapsulate() - receives pointer to tm packet and prints out packet preamble, payload data and postamble
-		*	input: uint8_t pointer to memory adress of TM packet
-		*	output: none
-		*	returns 0 at end
-		*	function calls: none
-		*/
-		int decapsulate(uint8_t *frame_ptr)
-			{
-			// Init local TM_FRAME struct to put packet in
-			TM_HEADER tm_frame;
-			// copy data from address in frame_ptr to local struct for processing
-			if(memcpy(&tm_frame, frame_ptr, sizeof(TM_HEADER)) == NULL)
-			{
-				std::cout << "memcpy returned empty address!" << std::endl;	
-			}
-			// use TM_HEADER to print out parameters
-			std::cout << "[tmtc.cpp:parse_tm_header] Preamble: " << std::hex << (tm_frame.preamble & 0xFFFFFFFF) << std::endl;
-			std::cout << "[tmtc.cpp:parse_tm_header] Total length: " << std::dec << (tm_frame.total_len & 0xFFF) << std::endl;
-			std::cout << "[tmtc.cpp:parse_tm_header] Time tag: " << std::dec << tm_frame.time_tag << std::endl;
-			std::cout << "[tmtc.cpp:parse_tm_header] Scrambler: " << std::dec << (tm_frame.scrambler & 0x1) << std::endl;
-			std::cout << "[tmtc.cpp:parse_tm_header] Basis: " << std::dec << (tm_frame.basis & 0x1) << std::endl;
-			std::cout << "[tmtc.cpp:parse_tm_header] FEC: " << std::dec << (tm_frame.fec & 0xF) << std::endl;
-			std::cout << "[tmtc.cpp:parse_tm_header] Payload Length: " << std::dec << tm_frame.tf_size << std::endl;
-			// copy payload data from adress in frame_ptr to local struct for processing
-			uint8_t *payload_ptr = (uint8_t *)malloc(tm_frame.tf_size);
-			if(memcpy(payload_ptr, (frame_ptr + sizeof(TM_HEADER)), tm_frame.tf_size) ==NULL)
-			{
-				std::cout << "[tmtc.cpp:parse_tm_header] memcpy returned empty address!" << std::endl;
-			}
-			// when sending payload as characters it can be necessary to add a trailing null char
-			// payload_ptr[tm_frame.tf_size] = '\0';
-			//std::cout << "[tmtc.cpp:parse_tm_header] Data is: " << payload_ptr << std::endl;
-
-			// with a for loop printing out data we avoid printing unwanted extra chars
-			std::cout << "[tmtc.cpp:parse_tm_header] Data is: ";
-			for(int i = 0; i < tm_frame.tf_size; i++)
-			{
-				std::cout << payload_ptr[i];
-			}
-			std::cout << "\n";
-
-			// copy postamble from adress in frame_ptr to local struct for processing
-			uint32_t postamble = 0;
-			if(memcpy(&postamble, (frame_ptr +sizeof(TM_HEADER) + tm_frame.tf_size), sizeof(uint32_t)) == NULL)
-			{
-				std::cout << "[tmtc.cpp:parse_tm_header] memcpy returned empty address!" << std::endl;
-			}
-			std::cout << "[tmtc.cpp:parse_tm_header] Postamble: " << std::hex << postamble << std::endl;
-			return 0;
-		}
 		/*	GenIRIGTag() -   generates unsigned 64-bit IRIG-B time tag
 		*	inputs: none
 		*	outputs: uint64_t time tag
@@ -171,59 +117,327 @@ namespace tmtc
 	
 	namespace telecommand
 	{	
-		/*	encapsulate - encapsulates a message in a telecommand header and returns the pointer to the packet in memory
-		*	in: char pointer to message and length of message, e.g strlen(message)
-		*	out: creates a telecommand packet in memory
-		*	returns pointer to start of packet
-		*/
-		uint8_t *encapsulate(const char *message, uint32_t message_len)
-    	{
-        
-	        TC_HEADER tx_tc_frame;
-	        tx_tc_frame.preamble = PREAMBLE;
-	        uint32_t total_len = (sizeof(TC_HEADER) + message_len);
-	        tx_tc_frame.total_len = total_len;
-	        tx_tc_frame.tf_size = message_len;
-	        
-	        // allocate memory space for TC packet
-	        uint8_t *tc_ptr = (uint8_t *)malloc(tx_tc_frame.total_len);
-	        // copy TC header to allocated memory
-	        if(memcpy(tc_ptr, &tx_tc_frame, sizeof(TC_HEADER)) == NULL)
-	        {
-	            std::cout << "memcpy returned empty address!" << std::endl;
-	        }
-
-	        // adding message after tc header
-	        if(memcpy((tc_ptr + sizeof(TC_HEADER)), message, tx_tc_frame.tf_size) == NULL)
-	        {
-	            std::cout << "memcpy returned empty address!" << std::endl;
-	        }
-
-	        // return the pointer containing the adress to the constructed TC frame
-	        return tc_ptr; 
-    	}
-
-		/*	decapsulate - decapsulates a TC packet and prints the payload data
-		*	in: uint8_t pointer to TC packet memory address, uint32_t data_size (not used)
-		*	out: prints out payload data from TC packet
-		*	returns 0
-		*/
-		int decapsulate(uint8_t *tc_ptr, uint32_t data_size)
+		void EncapsulateTC(uint8_t *pnOut, uint32_t nCltuSize, uint8_t *pnData)
 		{
-			// Init struct TC_HEADER locally
-			TC_HEADER tc_header;
-			// save TC header first
-			memcpy(&tc_header, tc_ptr, sizeof(TC_HEADER));
-			// use tf_size from TC header to malloc memory for payload
-			uint8_t *payload = (uint8_t *)malloc(tc_header.tf_size);
-			// copy data from TC pointer to payload
-			memcpy(payload, (tc_ptr + sizeof(TC_HEADER)), tc_header.tf_size);
-			// print payload
-			std::cout << "[tmtc.cpp:decapsulate] Payload: " << payload << std::endl;
+			// Local variables: Preamble, Postamble, TimeTag add m_ to all locals
+			TC_HEADER sTCheader;
 
-			return 0;
+			sTCheader.nPreamble = PREAMBLE;			// PREAMBLE defined in tables.h
+			sTCheader.nMsgType = 1;
+			sTCheader.nCltuSize = nCltuSize;
+			sTCheader.nMsglen = sizeof(TC_HEADER) + nCltuSize + sizeof(uint32_t);
+			sTCheader.nTimeTag = tmtc::telemetry::GenIRIGBTag();
+
+			// copies tc header to output ref/ptr
+			memcpy(pnOut, &sTCheader, sizeof(TC_HEADER));
+			// copies data from input reference to output reference
+			memcpy((pnOut + sizeof(TC_HEADER)), pnData, nCltuSize);
+			// copies postable from local variable to output reference
+			memcpy(pnOut + sizeof(TC_HEADER) + nCltuSize, &sTCheader.nPreamble, sizeof(uint32_t));
+			return;
 		}
+
+		void DecapsulateTC(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType,
+			uint32_t& nCltuSize, uint8_t *pnData)
+		{
+			TC_HEADER m_sTCheader;
+			// Copy TM header to local struct
+			memcpy(&m_sTCheader, pnPacket, sizeof(TC_HEADER));
+
+			nMsglen = (m_sTCheader.nMsglen & 0x3FF);
+			nTimeTag = m_sTCheader.nTimeTag;
+			nMsgType = (m_sTCheader.nMsgType & 0x7);
+			nCltuSize = (m_sTCheader.nCltuSize & 0x3FF);
+			// copy data to local address pointed to by pnData using CADU Size
+			memcpy(pnData, (pnPacket + sizeof(TC_HEADER)) , m_sTCheader.nCltuSize);
+			return;
+		}
+		// unclear what the data format is supposed to be in this packet
+		// Very unnecessary when the ACK code could just be inserted with a memcpy and then a new postamble could be added
+		void EncapsulateTCACK(uint8_t *pnPacket, uint32_t nAckCode, uint8_t *pnOut)
+		{
+			// Local variables: Preamble, Postamble, TimeTag add m_ to all locals
+			TC_HEADER m_sTcAckHeader;
+
+			memcpy(&m_sTcAckHeader, pnPacket, sizeof(TC_HEADER));
+			memcpy((&m_sTcAckHeader + sizeof(TC_HEADER)), (pnPacket + sizeof(TC_HEADER)), m_sTcAckHeader.nCltuSize);
+
+			m_sTcAckHeader.nPreamble = PREAMBLE;		// PREAMBLE defined in tables.h
+			m_sTcAckHeader.nMsgType = 1;
+			m_sTcAckHeader.nTimeTag = tmtc::telemetry::GenIRIGBTag();
+			uint32_t m_nAckCode = 0;
+			uint32_t m_nPostamble = POSTAMBLE;
+
+			// copies tm header to output ref/ptr
+			memcpy(pnOut, &m_sTcAckHeader, sizeof(TC_HEADER));
+			// copies data from input reference to output reference
+			memcpy((pnOut + sizeof(TC_HEADER)), (pnPacket + sizeof(TC_HEADER)), m_sTcAckHeader.nCltuSize);
+			memcpy((pnOut + sizeof(TC_HEADER) + m_sTcAckHeader.nCltuSize), &m_nAckCode, sizeof(m_nAckCode));
+			// copies postable from local variable to output reference
+			memcpy((pnOut + sizeof(TC_HEADER) + m_sTcAckHeader.nCltuSize + sizeof(m_nAckCode)), &m_nPostamble, sizeof(uint32_t));
+			return;
+		} 
 	} /* telecommand */
+
+	void EncapsulateTrack(uint8_t *pnOut, uint32_t nPayloadSize, uint8_t *pnPayload)
+	{
+		TR_HEADER m_sTRheader;
+		m_sTRheader.nPreamble = PREAMBLE;
+		m_sTRheader.nMsglen = sizeof(TR_HEADER) + nPayloadSize + sizeof(uint32_t);
+		m_sTRheader.nTimeTag = tmtc::telemetry::GenIRIGBTag();
+		m_sTRheader.nMsgType = 3;	nMsgType			// Message type 3 = tracking
+		uint32_t m_nPostamble = POSTAMBLE;
+
+
+		memcpy(pnOut, &m_sTRheader, sizeof(TR_HEADER));
+		memcpy((pnOut + sizeof(TR_HEADER)), pnPayload, nPayloadSize);
+		memcpy((pnOut + sizeof(TR_HEADER) + nPayloadSize), &m_nPostamble, sizeof(uint32_t)); 
+		return;
+	}
+
+	void DecapsulateTrack(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType, uint8_t *pnPayload)
+	{
+		TR_HEADER m_sTRheader;
+		// copy data from pointer to local struct
+		memcpy(&m_sTRheader, pnPacket, sizeof(TR_HEADER));
+
+		// transfer parameters from local struct to references using bit masking
+		nMsglen = (m_sTRheader.nMsglen & 0x3FF);
+		nTimeTag = m_sTRheader.nTimeTag;
+		nMsgType = (m_sTRheader.nMsgType & 0x7);
+
+		// copy payload data from packet pointer to payload pointer
+		memcpy(pnPayload, (pnPacket + sizeof(TR_HEADER)), (nMsglen - sizeof(TR_HEADER) - sizeof(uint32_t)));
+		return;
+	}
+
+
+	void EncapsulateAntenna(uint8_t *pnOut, float fSatID, float fAzimuth, float fElevation)
+	{
+		ANT_HEADER m_sANTheader;
+		
+		m_sANTheader.nPreamble = PREAMBLE;
+		m_sANTheader.nMsglen = sizeof(ANT_HEADER) + sizeof(uint32_t);
+		// debug
+		std::cout << "Message lenght: " << m_sANTheader.nMsglen << std::endl;
+		m_sANTheader.nTimeTag = tmtc::telemetry::GenIRIGBTag();
+		m_sANTheader.nMsgType = 4;
+		m_sANTheader.fSatID = fSatID;
+		m_sANTheader.fAzimuth = fAzimuth;
+		m_sANTheader.fElevation = fElevation;
+
+		uint32_t m_nPostamble = POSTAMBLE;
+
+		memcpy(pnOut, &m_sANTheader, sizeof(ANT_HEADER));
+		memcpy((pnOut + sizeof(ANT_HEADER)), &m_nPostamble, sizeof(m_nPostamble));
+
+		return;
+	}
+
+	void DecapsulateAntenna(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType, float& fSatID, float& fAzimuth, float& fElevation)
+	{
+		ANT_HEADER m_sANTheader;
+
+		memcpy(&m_sANTheader, pnPacket, sizeof(m_sANTheader));
+
+		nMsglen = (m_sANTheader.nMsglen & 0x3FF);
+		nTimeTag = m_sANTheader.nTimeTag;
+		nMsgType = (m_sANTheader.nMsgType & 0x7);
+		fSatID = m_sANTheader.fSatID;
+		fAzimuth = m_sANTheader.fAzimuth;
+		fElevation = m_sANTheader.fElevation;
+
+		return;
+	}
+
+	void EncapsulateDoppler(uint8_t *pnOut, float fSatID, float fRxFreq, float fRxDoppler, float fTxFreq, float fTxDoppler)
+	{
+		DOPP_HEADER m_sDOPPheader;
+		m_sDOPPheader.nPreamble = PREAMBLE;
+		m_sDOPPheader.nMsglen = sizeof(m_sDOPPheader) + sizeof(uint32_t);		
+		m_sDOPPheader.nTimeTag = tmtc::telemetry::GenIRIGBTag();
+		m_sDOPPheader.nMsgType = 5;
+		m_sDOPPheader.fSatID = fSatID;
+		m_sDOPPheader.fRxFreq = fRxFreq;
+		m_sDOPPheader.fRxDoppler = fRxDoppler;
+		m_sDOPPheader.fTxFreq = fTxFreq;
+		m_sDOPPheader.fTxDoppler = fTxDoppler;
+
+		uint32_t m_nPostamble = POSTAMBLE;
+
+		memcpy(pnOut, &m_sDOPPheader, sizeof(DOPP_HEADER));
+		memcpy((pnOut + sizeof(DOPP_HEADER)), &m_nPostamble, sizeof(uint32_t));
+
+		return;
+	}
+
+	void DecapsulateDoppler(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType, float& fSatID,
+		float& fRxFreq, float& fRxDoppler, float& fTxFreq, float& fTxDoppler)
+	{
+		DOPP_HEADER m_sDOPPheader;
+
+		memcpy(&m_sDOPPheader, pnPacket, sizeof(DOPP_HEADER));
+
+		nMsglen = (m_sDOPPheader.nMsglen & 0x3FF);
+		nTimeTag = m_sDOPPheader.nTimeTag;
+		nMsgType = (m_sDOPPheader.nMsgType & 0x7);
+		fSatID = m_sDOPPheader.fSatID;
+		fRxFreq = m_sDOPPheader.fRxFreq;
+		fRxDoppler = m_sDOPPheader.fRxDoppler;
+		fTxFreq = m_sDOPPheader.fTxFreq;
+		fTxDoppler = m_sDOPPheader.fTxDoppler;
+
+		return;
+	}
+
+	void EncapsulateDecoder(uint8_t *pnOut, uint32_t nPayloadLen, uint8_t *pnPayload)
+	{
+		DEC_HEADER m_sDECheader;
+
+		m_sDECheader.nPreamble = PREAMBLE;
+		m_sDECheader.nMsglen = sizeof(DEC_HEADER) + nPayloadLen + sizeof(uint32_t);
+		m_sDECheader.nPayloadLen = nPayloadLen;
+		uint32_t m_nPostamble = POSTAMBLE;
+
+		memcpy(pnOut, &m_sDECheader, sizeof(DEC_HEADER));
+		memcpy((pnOut + sizeof(DEC_HEADER)), pnPayload, nPayloadLen);
+		memcpy((pnOut + sizeof(DEC_HEADER) + nPayloadLen), &m_nPostamble, sizeof(uint32_t));
+
+		return;
+	}
+
+	void DecapsulateDecoder(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nPayloadLen, uint8_t *pnPayload)
+	{
+		DEC_HEADER m_sDECheader;
+
+		memcpy(&m_sDECheader, pnPacket, sizeof(DEC_HEADER));
+
+		nMsglen = m_sDECheader.nMsglen;
+		nPayloadLen = m_sDECheader.nPayloadLen;
+		std::cout << "Payload length from DecapsulateDecoder: " << nPayloadLen << std::endl;
+		memcpy(pnPayload, (pnPacket + sizeof(DEC_HEADER)), nPayloadLen);
+
+		return;
+	}
+
+	namespace parse
+	{
+	
+		std::string ParseMsgType(uint32_t& nMsgType)
+		{	
+			switch(nMsgType)
+			{
+				case 0:
+				return "Telemetry";
+				
+				case 1:
+				return "Telecommand";
+				
+				case 2:
+				return "Not defined";
+				
+				case 3:
+				return "Tracking";
+				
+				case 4:
+				return "Antenna";
+				
+				case 5:
+				return "Doppler";
+				
+				default:
+				break;
+			}
+
+			// Should never reach here with correct inputs
+			return "Invalid message type";
+		}
+
+		std::string ParseScrambler(uint32_t& nScrambler)
+		{	
+			switch(nScrambler)
+			{
+				case 0:
+				return "CCSDS";
+				
+				case 1:
+				return "G3RUH";
+				
+				default:
+				break;
+			}
+
+			// Should never reach here with correct inputs
+			return "Invalid message type";
+		}
+
+		std::string ParseFEC(uint32_t& nFEC)
+		{	
+			switch(nFEC)
+			{
+				case 0:
+				return "NONE";
+				
+				case 1:
+				return "VITERBI";
+
+				case 2:
+				return "INVERTED VITERBI";
+				
+				case 3:
+				return "RS (255, 223)";
+				
+				case 4:
+				return "RS (255, 239)";
+				
+				case 5:
+				return "VITERBI + RS (255, 223)";
+				
+				case 6:
+				return "VITERBI + RS (255, 239)";
+				
+				case 7:
+				return "INV VITERBI + RS (255, 223)";
+					
+				case 8:
+				return "INV VITERBI + RS (255, 239)";
+
+				default:
+				break;
+			}
+
+			// Should never reach here with correct inputs
+			return "Invalid message type";
+		}
+
+		std::string ParseFrameFormat(uint32_t& nFrameFormat)
+		{	
+			switch(nFrameFormat)
+			{
+				case 0:
+				return "NONE";
+				
+				case 1:
+				return "ASM1";
+				
+				case 2:
+				return "ASM2";
+				
+				case 3:
+				return "ASM3";
+				
+				case 4:
+				return "AX25";
+				
+				default:
+				break;
+			}
+
+			// Should never reach here with correct inputs
+			return "Invalid message type";
+		}
+
+	}	/* parse */
 }	/* tmtc */
 
 
