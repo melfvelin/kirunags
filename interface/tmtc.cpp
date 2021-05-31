@@ -185,7 +185,7 @@ namespace tmtc
 		m_sTRheader.nPreamble = PREAMBLE;
 		m_sTRheader.nMsglen = sizeof(TR_HEADER) + nPayloadSize + sizeof(uint32_t);
 		m_sTRheader.nTimeTag = tmtc::telemetry::GenIRIGBTag();
-		m_sTRheader.nMsgType = 3;				// Message type 3 = tracking
+		m_sTRheader.nMsgType = 3;	nMsgType			// Message type 3 = tracking
 		uint32_t m_nPostamble = POSTAMBLE;
 
 
