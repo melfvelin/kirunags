@@ -163,7 +163,7 @@ namespace tmtc
 			memcpy((&m_sTcAckHeader + sizeof(TC_HEADER)), (pnPacket + sizeof(TC_HEADER)), m_sTcAckHeader.nCltuSize);
 
 			m_sTcAckHeader.nPreamble = PREAMBLE;		// PREAMBLE defined in tables.h
-			m_sTcAckHeader.nMsgType = 1;
+			m_sTcAckHeader.nMsgType = 2;
 			m_sTcAckHeader.nTimeTag = tmtc::telemetry::GenIRIGBTag();
 			uint32_t m_nAckCode = 0;
 			uint32_t m_nPostamble = POSTAMBLE;
