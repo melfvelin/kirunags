@@ -48,6 +48,8 @@ namespace tmtc
       float& fRxFreq, float& fRxDoppler, float& fTxFreq, float& fTxDoppler);
       void EncapsulateDecoder(uint8_t *pnOut, uint32_t nPayloadLen, uint8_t *pnPayload);
       void DecapsulateDecoder(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nPayloadLen, uint8_t *pnPayload);
+      void EncapsulateStatus(uint8_t *pnOut, uint32_t nTabType);
+      void DecapsulateStatus(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType, uint32_t& nTabType)
 
       namespace parse
       {

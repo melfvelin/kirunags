@@ -82,6 +82,36 @@ typedef struct __attribute__ ((packed)) _DEC_HEADER {
     uint32_t nPayloadLen;       /* Payload length */
 } DEC_HEADER;
 
+typedef struct __attribute__ ((packed)) _STATUS_HEADER {
+    uint32_t nPreamble;         /* Packet preamble */
+    uint32_t nMsglen;           /* Total packet length */
+    uint32_t nMsgType;          /* Message type */
+    uint32_t nTabType;          /* Table type */
+    uint32_t nPostamble;        /* Packet postamble */
+} STATUS_HEADER;
+
+typedef struct __attribute__ ((packed)) _SESH_HEADER {
+    uint32_t nPreamble;         /* Packet preamble */
+    uint32_t nMsglen;           /* Total packet length */
+    uint32_t nMsgType;          /* Message type */
+    uint32_t nTabType;          /* Table type */
+    uint32_t nTabLen;           /* Table length */
+/*  uint8_t* nPayload;             Table data
+    uint32_t nPostamble;        */ 
+} SESH_HEADER;
+
+/*  REQ TYPES
+    10 - DL TABLE
+    20 - UL TABLE
+    30 - ETC
+
+    With this format the session and status messages can use the same numbers, status request uses the number
+    the user wants to retrieve, status response uses the same number as "Message type" (should maybe be called table type not to conflict)
+    for that table. Session can use it by specifying what table it is uploading. It could be easier to manage the session payload data
+    if the pointer used was a uint32_t pointer instead
+
+*/ 
+
 typedef struct __attribute__ ((packed)) _DL_TABLE {
     uint32_t nPreamble;         /* Packet preamble */
     uint32_t nMsglen;           /* Total packet length, fixed */
@@ -100,7 +130,6 @@ typedef struct __attribute__ ((packed)) _DL_TABLE {
     uint32_t nIntLeavDept;      /* Interleave depth */
     uint32_t nBasis;            /* RS basis */
     uint32_t nPostamble;        /* Packet postamble */
-
 } DL_TABLE;
 
 typedef struct __attribute__ ((packed)) _UL_TABLE {

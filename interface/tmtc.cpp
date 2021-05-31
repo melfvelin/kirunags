@@ -146,7 +146,7 @@ namespace tmtc
 
 			nMsglen = (m_sTCheader.nMsglen & 0x3FF);
 			nTimeTag = m_sTCheader.nTimeTag;
-			nMsgType = (m_sTCheader.nMsgType & 0x7);
+			nMsgType = (m_sTCheader.nMsgType & 0x15);
 			nCltuSize = (m_sTCheader.nCltuSize & 0x3FF);
 			// copy data to local address pointed to by pnData using CADU Size
 			memcpy(pnData, (pnPacket + sizeof(TC_HEADER)) , m_sTCheader.nCltuSize);
@@ -204,7 +204,7 @@ namespace tmtc
 		// transfer parameters from local struct to references using bit masking
 		nMsglen = (m_sTRheader.nMsglen & 0x3FF);
 		nTimeTag = m_sTRheader.nTimeTag;
-		nMsgType = (m_sTRheader.nMsgType & 0x7);
+		nMsgType = (m_sTRheader.nMsgType & 0x15);
 
 		// copy payload data from packet pointer to payload pointer
 		memcpy(pnPayload, (pnPacket + sizeof(TR_HEADER)), (nMsglen - sizeof(TR_HEADER) - sizeof(uint32_t)));
@@ -242,7 +242,7 @@ namespace tmtc
 
 		nMsglen = (m_sANTheader.nMsglen & 0x3FF);
 		nTimeTag = m_sANTheader.nTimeTag;
-		nMsgType = (m_sANTheader.nMsgType & 0x7);
+		nMsgType = (m_sANTheader.nMsgType & 0x15);
 		fSatID = m_sANTheader.fSatID;
 		fAzimuth = m_sANTheader.fAzimuth;
 		fElevation = m_sANTheader.fElevation;
@@ -280,7 +280,7 @@ namespace tmtc
 
 		nMsglen = (m_sDOPPheader.nMsglen & 0x3FF);
 		nTimeTag = m_sDOPPheader.nTimeTag;
-		nMsgType = (m_sDOPPheader.nMsgType & 0x7);
+		nMsgType = (m_sDOPPheader.nMsgType & 0x15);
 		fSatID = m_sDOPPheader.fSatID;
 		fRxFreq = m_sDOPPheader.fRxFreq;
 		fRxDoppler = m_sDOPPheader.fRxDoppler;
@@ -296,6 +296,7 @@ namespace tmtc
 
 		m_sDECheader.nPreamble = PREAMBLE;
 		m_sDECheader.nMsglen = sizeof(DEC_HEADER) + nPayloadLen + sizeof(uint32_t);
+		m_sDECheader.nMsgType = 6;
 		m_sDECheader.nPayloadLen = nPayloadLen;
 		uint32_t m_nPostamble = POSTAMBLE;
 
@@ -317,6 +318,62 @@ namespace tmtc
 		std::cout << "Payload length from DecapsulateDecoder: " << nPayloadLen << std::endl;
 		memcpy(pnPayload, (pnPacket + sizeof(DEC_HEADER)), nPayloadLen);
 
+		return;
+	}
+
+	void EncapsulateStatus(uint8_t *pnOut, uint32_t nTabType)
+	{
+		STATUS_HEADER m_sStatusHeader;
+
+		m_sStatusHeader.nPreamble = PREAMBLE;
+		m_sStatusHeader.nMsglen = sizeof(STATUS_HEADER);
+		m_sStatusHeader.nMsgType = 7;
+		m_sStatusHeader.nTabType = nTabType;
+		m_sStatusHeader.nPostamble = POSTAMBLE;
+
+		memcpy(pnOut, &m_sStatusHeader, m_sStatusHeader.nMsglen);
+
+		return;
+	}
+
+	void DecapsulateStatus(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType, uint32_t& nTabType)
+	{
+		STATUS_HEADER m_sStatusHeader;
+
+		memcpy(&m_sStatusHeader, pnPacket, sizeof(STATUS_HEADER));
+
+		nMsglen = (m_sStatusHeader.nMsglen & 0x3FF);
+		nMsgType = (m_sStatusHeader.nMsgType & 0x15);
+		nTabType = (m_sStatusHeader.nTabType & 0x15);
+
+		return;
+	}
+	/* EncapsulateSession - takes a pointer to the table the user wants to upload to the Expedite server
+	*	and encapsulates it in a Session frame
+	* Inputs: Pointer to memory where output will go (pnOut), Table type, Table length and 
+	pointer to table to upload */
+	void EncapsulateSession(uint8_t *pnOut, uint32_t nTabType, uint32_t nTabLen, uint8_t *pnPayload)
+	{
+		SESH_HEADER m_sSeshHeader;
+
+		m_sSeshHeader.nPreamble = PREAMBLE;
+		m_sSeshHeader.nMsglen = sizeof(SESH_HEADER) + nTabLen + sizeof(uint32_t);
+		m_sSeshHeader.nMsgType = 8;
+		m_sSeshHeader.nTabType = nTabType;
+		m_sSeshHeader.nTabLen = nTabLen;
+		uint32_t nPostamble = POSTAMBLE;
+
+		memcpy(pnOut, &m_sSeshHeader, sizeof(SESH_HEADER));
+		memcpy((pnOut + sizeof(SESH_HEADER)), pnPayload, nTabLen);
+		memcpy((pnOut + sizeof(SESH_HEADER) + nTabLen), &nPostamble, sizeof(nPostamble));
+
+		return;
+	}
+
+	void DecapsulateSession()
+	{
+		
+		
 		return;
 	}
 
