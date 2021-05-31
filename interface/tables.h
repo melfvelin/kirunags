@@ -84,21 +84,29 @@ typedef struct __attribute__ ((packed)) _DEC_HEADER {
 
 typedef struct __attribute__ ((packed)) _DL_TABLE {
     uint32_t nPreamble;         /* Packet preamble */
-    uint32_t nMsglen;           /* Total packet length */
-    uint32_t nMsgType;          /* Payload length */
+    uint32_t nMsglen;           /* Total packet length, fixed */
+    uint32_t nMsgType;          /* Message type */
     uint32_t nScrambler;        /* CCSDS scrambler */
     uint32_t nFEC;              /* FEC code */
     uint32_t nFrameFormat;      /* Frame format */
     uint32_t nLineCode;         /* Line code */
     uint32_t nModScheme;        /* Modulation scheme */
-    float fBitRate;            /* Bit rate */
-    uint32_t nPlopVersion;      /* PLOP version */
+    float fBitRate;             /* Bit rate */
+    uint32_t nFilterType;       /* Filter type */
+    uint32_t nFilterRolloff;    /* Filter roll-off */
+    uint32_t nLoopBW;           /* Loop bandwidth */
+    uint32_t nSynchWord;        /* Hexadecimal sync word */
+    uint32_t nSyncWordLen;      /* Sync word length (bits) */
+    uint32_t nIntLeavDept;      /* Interleave depth */
+    uint32_t nBasis;            /* RS basis */
+    uint32_t nPostamble;        /* Packet postamble */
+
 } DL_TABLE;
 
 typedef struct __attribute__ ((packed)) _UL_TABLE {
     uint32_t nPreamble;         /* Packet preamble */
-    uint32_t nMsglen;           /* Total packet length */
-    uint32_t nMsgType;          /* Payload length */
+    uint32_t nMsglen;           /* Total packet length, fixed*/
+    uint32_t nMsgType;          /* Message type */
     uint32_t nScrambler;        /* CCSDS scrambler */
     uint32_t nFEC;              /* FEC code */
     uint32_t nFrameFormat;      /* Frame format */
@@ -121,21 +129,6 @@ typedef struct __attribute__ ((packed)) _UL_TABLE {
     uint32_t nCmm2Mask;         /* CMM2 bit mask */
     uint32_t nPostAmble;        /* Postamble */
 } UL_TABLE;
-
-typedef struct __attribute__ ((packed)) _UPLINK_TABLE {
-
-    uint32_t idle_pattern;   /* Idle pattern */
-    uint32_t idle_pat_len;   /* Idle pattern length */
-    uint32_t cmm1_check;     /* CMM1 Check */
-    uint32_t cmm1_set_time;  /* CMM1 RF Set Time */
-    uint32_t cmm1_offset;    /* CMM1 byte number */
-    uint32_t cmm1_mask;      /* CMM1 Mask */
-    uint32_t cmm2_check;     /* CMM1 Check */
-    uint32_t cmm2_fall_time; /* CMM1 RF Set Time */
-    uint32_t cmm2_offset;    /* CMM1 byte number */
-    uint32_t cmm2_mask;      /* CMM1 Mask */
-    uint32_t postamble;      /* Postamble */
-} UPLINK_TABLE;
 
 
 #endif /* TABLES_H */
