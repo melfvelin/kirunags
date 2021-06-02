@@ -33,10 +33,10 @@ namespace tmtc
    	namespace telecommand
    	{ 
          void EncapsulateTC(uint8_t *pnOut, uint32_t nCltuSize, uint8_t *pnData);
-         void DecapsulateTC(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType,
+         void DecapsulateTC(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType,
          uint32_t& nCltuSize, uint8_t *pnData);
-   		//uint8_t *encapsulate(const char *message, uint32_t message_len);	
-   		//int decapsulate(uint8_t *tc_ptr, uint32_t data_size);
+         void EncapsulateTCACK(uint8_t *pnOut, uint32_t nCltuSize, uint32_t nAckCode, uint8_t *pnData);
+         void DecapsulateTCACK(uint8_t *pnPacket, uint32_t& nAckCode, uint8_t *pnData);
    	}
 
       void EncapsulateTrack(uint8_t *pnOut, uint32_t nPayloadSize, uint8_t *pnPayload);
@@ -49,7 +49,7 @@ namespace tmtc
       void EncapsulateDecoder(uint8_t *pnOut, uint32_t nPayloadLen, uint8_t *pnPayload);
       void DecapsulateDecoder(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nPayloadLen, uint8_t *pnPayload);
       void EncapsulateStatus(uint8_t *pnOut, uint32_t nTabType);
-      void DecapsulateStatus(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType, uint32_t& nTabType)
+      void DecapsulateStatus(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType, uint32_t& nTabType);
 
       namespace parse
       {
@@ -60,7 +60,8 @@ namespace tmtc
       }
   }
 
-
+// global variable declaration 
+extern UL_TABLE sUlTable;
 
 
 

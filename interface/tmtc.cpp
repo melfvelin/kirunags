@@ -126,7 +126,6 @@ namespace tmtc
 			sTCheader.nMsgType = 1;
 			sTCheader.nCltuSize = nCltuSize;
 			sTCheader.nMsglen = sizeof(TC_HEADER) + nCltuSize + sizeof(uint32_t);
-			sTCheader.nTimeTag = tmtc::telemetry::GenIRIGBTag();
 
 			// copies tc header to output ref/ptr
 			memcpy(pnOut, &sTCheader, sizeof(TC_HEADER));
@@ -137,7 +136,7 @@ namespace tmtc
 			return;
 		}
 
-		void DecapsulateTC(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType,
+		void DecapsulateTC(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType,
 			uint32_t& nCltuSize, uint8_t *pnData)
 		{
 			TC_HEADER m_sTCheader;
@@ -145,38 +144,63 @@ namespace tmtc
 			memcpy(&m_sTCheader, pnPacket, sizeof(TC_HEADER));
 
 			nMsglen = (m_sTCheader.nMsglen & 0x3FF);
-			nTimeTag = m_sTCheader.nTimeTag;
 			nMsgType = (m_sTCheader.nMsgType & 0x15);
 			nCltuSize = (m_sTCheader.nCltuSize & 0x3FF);
 			// copy data to local address pointed to by pnData using CADU Size
 			memcpy(pnData, (pnPacket + sizeof(TC_HEADER)) , m_sTCheader.nCltuSize);
 			return;
 		}
-		// unclear what the data format is supposed to be in this packet
-		// Very unnecessary when the ACK code could just be inserted with a memcpy and then a new postamble could be added
-		void EncapsulateTCACK(uint8_t *pnPacket, uint32_t nAckCode, uint8_t *pnOut)
+		// needs to be remade
+		void EncapsulateTCACK(uint8_t *pnOut, uint32_t nCltuSize, uint32_t nAckCode, uint8_t *pnData)
 		{
-			// Local variables: Preamble, Postamble, TimeTag add m_ to all locals
-			TC_HEADER m_sTcAckHeader;
-
-			memcpy(&m_sTcAckHeader, pnPacket, sizeof(TC_HEADER));
-			memcpy((&m_sTcAckHeader + sizeof(TC_HEADER)), (pnPacket + sizeof(TC_HEADER)), m_sTcAckHeader.nCltuSize);
+			TCACK_HEADER m_sTcAckHeader;
 
 			m_sTcAckHeader.nPreamble = PREAMBLE;		// PREAMBLE defined in tables.h
-			m_sTcAckHeader.nMsgType = 2;
+			m_sTcAckHeader.nMsglen = sizeof(TCACK_HEADER) + nCltuSize;
 			m_sTcAckHeader.nTimeTag = tmtc::telemetry::GenIRIGBTag();
-			uint32_t m_nAckCode = 0;
+			m_sTcAckHeader.nMsgType = 2;
+			m_sTcAckHeader.nScrambler = sUlTable.nScrambler;
+			m_sTcAckHeader.nFEC = sUlTable.nFEC;
+			m_sTcAckHeader.nFrameFormat = sUlTable.nFrameFormat;
+			m_sTcAckHeader.nLineCode = sUlTable.nLineCode;
+			m_sTcAckHeader.nModScheme = sUlTable.nModScheme;
+			m_sTcAckHeader.fBitRate = sUlTable.fBitRate;
+			m_sTcAckHeader.nPlopVersion = sUlTable.nPlopVersion;
+			m_sTcAckHeader.nAckCode = nAckCode;
+			m_sTcAckHeader.nCltuSize = nCltuSize;
 			uint32_t m_nPostamble = POSTAMBLE;
 
-			// copies tm header to output ref/ptr
-			memcpy(pnOut, &m_sTcAckHeader, sizeof(TC_HEADER));
-			// copies data from input reference to output reference
-			memcpy((pnOut + sizeof(TC_HEADER)), (pnPacket + sizeof(TC_HEADER)), m_sTcAckHeader.nCltuSize);
-			memcpy((pnOut + sizeof(TC_HEADER) + m_sTcAckHeader.nCltuSize), &m_nAckCode, sizeof(m_nAckCode));
-			// copies postable from local variable to output reference
-			memcpy((pnOut + sizeof(TC_HEADER) + m_sTcAckHeader.nCltuSize + sizeof(m_nAckCode)), &m_nPostamble, sizeof(uint32_t));
+			memcpy(pnOut, &m_sTcAckHeader, sizeof(TCACK_HEADER));
+			memcpy((pnOut + sizeof(TCACK_HEADER)), pnData, nCltuSize);
+			memcpy((pnOut + sizeof(TCACK_HEADER) + nCltuSize), &m_nPostamble, sizeof(m_nPostamble));
+
+			// memcpy(&m_sTcAckHeader, pnPacket, sizeof(TC_HEADER));
+			// memcpy((&m_sTcAckHeader + sizeof(TC_HEADER)), (pnPacket + sizeof(TC_HEADER)), m_sTcAckHeader.nCltuSize);
+
+			
+			
+			
+			
+			// // copies tm header to output ref/ptr
+			// memcpy(pnOut, &m_sTcAckHeader, sizeof(TC_HEADER));
+			// // copies data from input reference to output reference
+			// memcpy((pnOut + sizeof(TC_HEADER)), (pnPacket + sizeof(TC_HEADER)), m_sTcAckHeader.nCltuSize);
+			// memcpy((pnOut + sizeof(TC_HEADER) + m_sTcAckHeader.nCltuSize), &m_nAckCode, sizeof(m_nAckCode));
+			// // copies postable from local variable to output reference
+			// memcpy((pnOut + sizeof(TC_HEADER) + m_sTcAckHeader.nCltuSize + sizeof(m_nAckCode)), &m_nPostamble, sizeof(uint32_t));
 			return;
-		} 
+		}
+
+		void DecapsulateTCACK(uint8_t *pnPacket, uint32_t& nAckCode, uint8_t *pnData)
+		{	
+			TCACK_HEADER m_sTcAckHeader;
+
+			memcpy(&m_sTcAckHeader, pnPacket, sizeof(TCACK_HEADER));
+			memcpy(pnData, pnPacket, m_sTcAckHeader.nCltuSize);
+			nAckCode = m_sTcAckHeader.nAckCode;
+
+			return;
+		}
 	} /* telecommand */
 
 	void EncapsulateTrack(uint8_t *pnOut, uint32_t nPayloadSize, uint8_t *pnPayload)
@@ -185,7 +209,7 @@ namespace tmtc
 		m_sTRheader.nPreamble = PREAMBLE;
 		m_sTRheader.nMsglen = sizeof(TR_HEADER) + nPayloadSize + sizeof(uint32_t);
 		m_sTRheader.nTimeTag = tmtc::telemetry::GenIRIGBTag();
-		m_sTRheader.nMsgType = 3;	nMsgType			// Message type 3 = tracking
+		m_sTRheader.nMsgType = 3;
 		uint32_t m_nPostamble = POSTAMBLE;
 
 

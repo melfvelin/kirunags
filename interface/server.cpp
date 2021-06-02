@@ -161,6 +161,7 @@ namespace server{
 	    uint8_t *buff_ptr = (uint8_t *)malloc(sizeof(buffer));
 	    memcpy(buff_ptr, &buffer, valread);
 
+	    // function call to sync()
 
 	    tmtc::telecommand::decapsulate(buff_ptr, 0);
 
@@ -175,6 +176,62 @@ namespace server{
 		send(tm_socket, tm_ptr, (sizeof(TM_HEADER) + strlen(tm_buff) + sizeof(POSTAMBLE)), 0);
 
 		return 0;
+	}
+	// WIP WIP WIP WIP
+	void FindSyncMarker(const uint8_t *in, uint32_t nDataLen)
+	{
+		uint8_t m_SyncState;
+		uint8_t nNewBit;
+		uint8_t ones = 0;
+		uint32_t nPreamble = 0xA1B2C3D4;
+		uint32_t dwWord = 0;
+		uint8_t dataByte;
+
+		// nested for loop might be the best solution for TCP interface
+		// wip wip wip
+		for(int i = 0; i < nDataLen; i++)
+		{
+			// new byte comes in here
+
+			for(int j = 0; j < 8; j++)
+			{
+				// bit shifting happens here
+				nNewBit = (in[i] & 0x01);
+			}
+		}
+
+		/*
+		for(int i = 0; i < nDataLen * sizeof(uint8_t); i++)
+		{
+			bit = (in[i] & 0x01);
+			dwWord = (dwWord << 1) | bit;
+			dataByte = (dataByte << 1) | bit;
+			// ones = _mm_popcnt_u32(nPreamble^dwWord);
+
+
+			// byte implementation doesnt work unless one everything is byte-wise, what happens if packet is preceded by three bits of trash?
+			byte = (in[i] & 0xFF);
+			dwWord = (dwWord << 8) | byte;
+			dataByte = (dataByte << 8) | byte;
+
+			switch(m_SyncState)
+			{
+				case 0:		// SYNC STATE SEARCH
+					if(_mm_popcnt_u32(nPreamble^dwWord) == 0)
+					{
+						std::cout << "Start sequence found SEARCH -> DECODE" << std::endl;	
+					}
+					break;
+				case 1:		// SYNC STATE DECODE
+					std::cout << "State DECODE" << std::endl;
+					break;
+			}
+
+		}
+		*/
+		
+
+		return
 	}
 } /* server */
 

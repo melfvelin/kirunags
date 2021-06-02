@@ -111,11 +111,12 @@ typedef struct __attribute__ ((packed)) _SESH_HEADER {
     if the pointer used was a uint32_t pointer instead
 
 */ 
-
+// No uplink and downlink tables!
 typedef struct __attribute__ ((packed)) _DL_TABLE {
     uint32_t nPreamble;         /* Packet preamble */
     uint32_t nMsglen;           /* Total packet length, fixed */
     uint32_t nMsgType;          /* Message type */
+    uint32_t nTabType;          /* Table type */
     uint32_t nScrambler;        /* CCSDS scrambler */
     uint32_t nFEC;              /* FEC code */
     uint32_t nFrameFormat;      /* Frame format */
@@ -136,6 +137,7 @@ typedef struct __attribute__ ((packed)) _UL_TABLE {
     uint32_t nPreamble;         /* Packet preamble */
     uint32_t nMsglen;           /* Total packet length, fixed*/
     uint32_t nMsgType;          /* Message type */
+    uint32_t nTabType;          /* Table type */
     uint32_t nScrambler;        /* CCSDS scrambler */
     uint32_t nFEC;              /* FEC code */
     uint32_t nFrameFormat;      /* Frame format */

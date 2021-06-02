@@ -8,6 +8,8 @@
 #include "tables.h"
 #include <iomanip>
 
+// global variable declaration
+UL_TABLE sUlTable;
 
 int main()
 {
@@ -24,6 +26,7 @@ int main()
 	static uint32_t nFEC;
 	static uint32_t nFrameFormat;
 	static uint32_t nCaduSize;
+	static uint32_t m_nAckCode;
 	static float satid;
 	static float az = 0.0;
 	static float el = 0.0;
@@ -42,7 +45,7 @@ int main()
 	nInData[0] = 'C';
 	std::cout << "Sending TC: " << nInData[0] << std::endl;
 	tmtc::telecommand::EncapsulateTC(pnPacket, nDataSize, nInData);
-	tmtc::telecommand::DecapsulateTC(pnPacket, nMsglen, nTimeTag, nMsgType, nCaduSize, nOutData);
+	tmtc::telecommand::DecapsulateTC(pnPacket, nMsglen, nMsgType, nCaduSize, nOutData);
 	std::cout << "Decapsulated TC: " << nOutData[0] << std::endl;
 	std::cout << "Message type: " << nMsgType << std::endl;
 
@@ -79,6 +82,42 @@ int main()
 	std::cout << "Parsed string: " << tmtc::parse::ParseScrambler(nScrambler) << std::endl;
 	std::cout << "Parsed string: " << tmtc::parse::ParseFEC(nFEC) << std::endl;
 	std::cout << "Parsed string: " << tmtc::parse::ParseFrameFormat(nFrameFormat) << std::endl;
+
+
+	sUlTable.nPreamble = PREAMBLE;
+    sUlTable.nMsglen = sizeof(UL_TABLE);
+    sUlTable.nMsgType = 10;
+    sUlTable.nTabType = 1;
+    sUlTable.nScrambler = 1;
+    sUlTable.nFEC = 1;
+    sUlTable.nFrameFormat = 1;
+    sUlTable.nLineCode = 1;
+    sUlTable.nModScheme = 1;
+    sUlTable.fBitRate = 9600;
+    sUlTable.nPlopVersion = 1;
+    sUlTable.nCarFreq = 435000000;
+    sUlTable.nSubCarFreq = 434950000;
+    sUlTable.nSubCarType = 1;
+    sUlTable.nIdlePat = 1;
+    sUlTable.nIdlePatLen = 1;
+    sUlTable.nCmm1Check = 1;
+    sUlTable.nCmm1SetTime = 1;
+    sUlTable.nCmm1Offset = 1;
+    sUlTable.nCmm1Mask = 1;
+    sUlTable.nCmm2Check = 1;
+    sUlTable.nCmm2SetTime = 1;
+    sUlTable.nCmm2Offset = 1;
+    sUlTable.nCmm2Mask = 1;
+    sUlTable.nPostAmble = POSTAMBLE;
+
+    std::cout << "Uplink table set"  << std::endl;
+
+    tmtc::telecommand::EncapsulateTCACK(pnPacket, 1, 0, nInData);
+    std::cout << "TC ACK Encapsulated"  << std::endl;
+    tmtc::telecommand::DecapsulateTCACK(pnPacket, m_nAckCode, nOutData);
+
+    std::cout << "Ack code: " << m_nAckCode << std::endl;
+
 
 	return 0;
 }
