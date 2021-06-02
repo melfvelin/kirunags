@@ -95,10 +95,7 @@ typedef struct __attribute__ ((packed)) _SESH_HEADER {
     uint32_t nMsglen;           /* Total packet length */
     uint32_t nMsgType;          /* Message type */
     uint32_t nTabType;          /* Table type */
-    uint32_t nTabLen;           /* Table length */
-/*  uint8_t* nPayload;             Table data
-    uint32_t nPostamble;        */ 
-} SESH_HEADER;
+} SESH_HEADER;  // replaced for now by sending a conf table on the sesh port but used for decapsulation purposes
 
 /*  REQ TYPES
     10 - DL TABLE
@@ -111,7 +108,7 @@ typedef struct __attribute__ ((packed)) _SESH_HEADER {
     if the pointer used was a uint32_t pointer instead
 
 */ 
-// No uplink and downlink tables!
+
 typedef struct __attribute__ ((packed)) _DL_TABLE {
     uint32_t nPreamble;         /* Packet preamble */
     uint32_t nMsglen;           /* Total packet length, fixed */
@@ -123,14 +120,6 @@ typedef struct __attribute__ ((packed)) _DL_TABLE {
     uint32_t nLineCode;         /* Line code */
     uint32_t nModScheme;        /* Modulation scheme */
     float fBitRate;             /* Bit rate */
-    uint32_t nFilterType;       /* Filter type */
-    uint32_t nFilterRolloff;    /* Filter roll-off */
-    uint32_t nLoopBW;           /* Loop bandwidth */
-    uint32_t nSynchWord;        /* Hexadecimal sync word */
-    uint32_t nSyncWordLen;      /* Sync word length (bits) */
-    uint32_t nIntLeavDept;      /* Interleave depth */
-    uint32_t nBasis;            /* RS basis */
-    uint32_t nPostamble;        /* Packet postamble */
 } DL_TABLE;
 
 typedef struct __attribute__ ((packed)) _UL_TABLE {
@@ -145,20 +134,7 @@ typedef struct __attribute__ ((packed)) _UL_TABLE {
     uint32_t nModScheme;        /* Modulation scheme */
     float fBitRate;             /* Bit rate */
     uint32_t nPlopVersion;      /* PLOP version */
-    uint32_t nCarFreq;          /* Carrier frequency */
-    uint32_t nSubCarFreq;       /* Sub-carrier frequency */
-    uint32_t nSubCarType;       /* Sub-carrier type */
-    uint32_t nIdlePat;          /* Idle pattern */
-    uint32_t nIdlePatLen;       /* Idle pattern length */
-    uint32_t nCmm1Check;        /* CMM1 check */
-    uint32_t nCmm1SetTime;      /* CMM1 RF set time */
-    uint32_t nCmm1Offset;       /* CMM1 byte number */
-    uint32_t nCmm1Mask;         /* CMM1 bit mask */
-    uint32_t nCmm2Check;        /* CMM2 check */
-    uint32_t nCmm2SetTime;      /* CMM2 RF set time */
-    uint32_t nCmm2Offset;       /* CMM2 byte number */
-    uint32_t nCmm2Mask;         /* CMM2 bit mask */
-    uint32_t nPostAmble;        /* Postamble */
+    uint32_t nPostamble;        /* Postamble */
 } UL_TABLE;
 
 

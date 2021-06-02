@@ -155,7 +155,7 @@ namespace tmtc
 		{
 			TCACK_HEADER m_sTcAckHeader;
 
-			m_sTcAckHeader.nPreamble = PREAMBLE;		// PREAMBLE defined in tables.h
+			/* m_sTcAckHeader.nPreamble = PREAMBLE;		// PREAMBLE defined in tables.h
 			m_sTcAckHeader.nMsglen = sizeof(TCACK_HEADER) + nCltuSize;
 			m_sTcAckHeader.nTimeTag = tmtc::telemetry::GenIRIGBTag();
 			m_sTcAckHeader.nMsgType = 2;
@@ -173,24 +173,11 @@ namespace tmtc
 			memcpy(pnOut, &m_sTcAckHeader, sizeof(TCACK_HEADER));
 			memcpy((pnOut + sizeof(TCACK_HEADER)), pnData, nCltuSize);
 			memcpy((pnOut + sizeof(TCACK_HEADER) + nCltuSize), &m_nPostamble, sizeof(m_nPostamble));
-
-			// memcpy(&m_sTcAckHeader, pnPacket, sizeof(TC_HEADER));
-			// memcpy((&m_sTcAckHeader + sizeof(TC_HEADER)), (pnPacket + sizeof(TC_HEADER)), m_sTcAckHeader.nCltuSize);
-
-			
-			
-			
-			
-			// // copies tm header to output ref/ptr
-			// memcpy(pnOut, &m_sTcAckHeader, sizeof(TC_HEADER));
-			// // copies data from input reference to output reference
-			// memcpy((pnOut + sizeof(TC_HEADER)), (pnPacket + sizeof(TC_HEADER)), m_sTcAckHeader.nCltuSize);
-			// memcpy((pnOut + sizeof(TC_HEADER) + m_sTcAckHeader.nCltuSize), &m_nAckCode, sizeof(m_nAckCode));
-			// // copies postable from local variable to output reference
-			// memcpy((pnOut + sizeof(TC_HEADER) + m_sTcAckHeader.nCltuSize + sizeof(m_nAckCode)), &m_nPostamble, sizeof(uint32_t));
+			*/
 			return;
 		}
 
+		// Work in progress, only for demonstration
 		void DecapsulateTCACK(uint8_t *pnPacket, uint32_t& nAckCode, uint8_t *pnData)
 		{	
 			TCACK_HEADER m_sTcAckHeader;
@@ -351,7 +338,7 @@ namespace tmtc
 
 		m_sStatusHeader.nPreamble = PREAMBLE;
 		m_sStatusHeader.nMsglen = sizeof(STATUS_HEADER);
-		m_sStatusHeader.nMsgType = 7;
+		m_sStatusHeader.nMsgType = 10;
 		m_sStatusHeader.nTabType = nTabType;
 		m_sStatusHeader.nPostamble = POSTAMBLE;
 
@@ -367,8 +354,8 @@ namespace tmtc
 		memcpy(&m_sStatusHeader, pnPacket, sizeof(STATUS_HEADER));
 
 		nMsglen = (m_sStatusHeader.nMsglen & 0x3FF);
-		nMsgType = (m_sStatusHeader.nMsgType & 0x15);
-		nTabType = (m_sStatusHeader.nTabType & 0x15);
+		nMsgType = (m_sStatusHeader.nMsgType & 0xFF);
+		nTabType = (m_sStatusHeader.nTabType & 0xFF);
 
 		return;
 	}
@@ -376,7 +363,7 @@ namespace tmtc
 	*	and encapsulates it in a Session frame
 	* Inputs: Pointer to memory where output will go (pnOut), Table type, Table length and 
 	pointer to table to upload */
-	void EncapsulateSession(uint8_t *pnOut, uint32_t nTabType, uint32_t nTabLen, uint8_t *pnPayload)
+	/*void EncapsulateSession(uint8_t *pnOut, uint32_t nTabType, uint8_t *pnPayload)
 	{
 		SESH_HEADER m_sSeshHeader;
 
@@ -384,7 +371,6 @@ namespace tmtc
 		m_sSeshHeader.nMsglen = sizeof(SESH_HEADER) + nTabLen + sizeof(uint32_t);
 		m_sSeshHeader.nMsgType = 8;
 		m_sSeshHeader.nTabType = nTabType;
-		m_sSeshHeader.nTabLen = nTabLen;
 		uint32_t nPostamble = POSTAMBLE;
 
 		memcpy(pnOut, &m_sSeshHeader, sizeof(SESH_HEADER));
@@ -392,11 +378,17 @@ namespace tmtc
 		memcpy((pnOut + sizeof(SESH_HEADER) + nTabLen), &nPostamble, sizeof(nPostamble));
 
 		return;
-	}
+	} */
 
-	void DecapsulateSession()
-	{
-		
+	void DecapsulateSession(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType, uint32_t& nTabType)
+	{	
+		SESH_HEADER m_sSeshHeader;
+		memcpy(&m_sSeshHeader, pnPacket, sizeof(SESH_HEADER));
+
+		// bit mask these
+		nMsglen = m_sSeshHeader.nMsglen;
+		nMsgType = m_sSeshHeader.nMsgType;
+		nTabType = m_sSeshHeader.nTabType;
 		
 		return;
 	}

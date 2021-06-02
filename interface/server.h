@@ -12,6 +12,7 @@
 #include <string>
 #include <cstring>
 #include <arpa/inet.h>
+#include "tables.h"
 
 #define TM_PORT 2001
 #define TC_PORT 2002
@@ -21,5 +22,10 @@
 namespace server
 {
 	int setup(void);
+	void SetConfTable(uint8_t *pnData, uint32_t nMsglen, uint32_t nTabType);
 }
+
+// global variable declaration 
+extern UL_TABLE sUlTable;
+
 #endif /* SERVER_H */

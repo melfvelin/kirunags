@@ -50,6 +50,9 @@ namespace tmtc
       void DecapsulateDecoder(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nPayloadLen, uint8_t *pnPayload);
       void EncapsulateStatus(uint8_t *pnOut, uint32_t nTabType);
       void DecapsulateStatus(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType, uint32_t& nTabType);
+      void EncapsulateSession(uint8_t *pnOut, uint32_t nTabType, uint8_t *pnPayload);
+      void DecapsulateSession(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType, uint32_t& nTabType);
+      
 
       namespace parse
       {

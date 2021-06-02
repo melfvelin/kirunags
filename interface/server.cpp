@@ -30,9 +30,15 @@ namespace server{
 		// Init of variables
 		int server_tm;
 		int server_tc;
+		int m_nSeshServ;
+		int m_nStatServ;
+		int m_nStatSock = 0;
+		int m_nSeshSock = 0;
 		int tc_socket = 0;
 		int tm_socket = 0;
 		int valread;
+		struct sockaddr_in m_sAddrSesh;
+		struct sockaddr_in m_sAddrStat;
 		struct sockaddr_in address_tm;
 		struct sockaddr_in address_tc;
 		int opt = 1;
@@ -41,37 +47,38 @@ namespace server{
 		char *tm_ip;
 
 		// Init char array of zeros
-		char buffer[1024] = {0};
+		char m_cBuffer[1024] = {0};
 
 		// Creating socket file descriptor STEP 1
-		if((server_tm = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+		if((m_nSeshServ = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 		{
 			perror("[server.cpp:setup] Socket creation failed:");
 			exit(EXIT_FAILURE);
 		}
 
 		// creating a socket file descriptor for tc socket
-		if((server_tc = socket(AF_INET, SOCK_STREAM, 0)) == 0)
+		if((m_nStatServ = socket(AF_INET, SOCK_STREAM, 0)) == 0)
 		{
 			perror("[server.cpp:setup] TC socket creation failed:");
 			exit(EXIT_FAILURE);
 		}
 
 		// sets a socket option for tc socket, not necessary but good practice
-		if(setsockopt(server_tm, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+		if(setsockopt(m_nSeshServ, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
 		{
 			perror("[server.cpp:setup] setsockopt:");
 			exit(EXIT_FAILURE);
 		}
 
 		// sets a socket option for tc socket, not necessary but good practice
-		if(setsockopt(server_tc, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
+		if(setsockopt(m_nStatServ, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt)))
 		{
 			perror("[server.cpp:setup] tc setsockopt:");
 			exit(EXIT_FAILURE);
 		}
 
 		// with inet_aton it's easy to change from localhost to other IP adresses
+		/*
 		if(inet_aton("127.0.0.1", &address_tm.sin_addr) == 0)
 		{
 			perror("[server.cpp:setup] aton error");
@@ -83,37 +90,40 @@ namespace server{
 			perror("[server.cpp:setup] aton error");
 			exit(EXIT_FAILURE);
 		}
-		
-		address_tm.sin_family = AF_INET;
-		address_tc.sin_family = AF_INET;
-		address_tm.sin_port = htons(TM_PORT);
-		address_tc.sin_port = htons(TC_PORT);
+		*/
+		m_sAddrSesh.sin_addr.s_addr = INADDR_ANY;
+		m_sAddrStat.sin_addr.s_addr = INADDR_ANY;
+		m_sAddrSesh.sin_family = AF_INET;
+		m_sAddrStat.sin_family = AF_INET;
+		m_sAddrSesh.sin_port = htons(2005);
+		m_sAddrStat.sin_port = htons(2006);
 
-		if(bind(server_tm, (struct sockaddr *)&address_tm, sizeof(address_tm)) < 0 )
+
+		if(bind(m_nSeshServ, (struct sockaddr *)&m_sAddrSesh, sizeof(m_sAddrSesh)) < 0 )
 		{
 			perror("[server.cpp:setup] tm bind failed:");
 			exit(EXIT_FAILURE);
 		}
 
 		#ifdef debug
-		tc_ip = inet_ntoa(address_tm.sin_addr);
+		tc_ip = inet_ntoa(m_sAddrSesh.sin_addr);
 		printf("[server.cpp:setup] bind successfull on %s:%u\n", tm_ip, ntohs(address_tm.sin_port));
 		#endif /* debug */
 
 		// Attempting to bind tc address
-		if(bind(server_tc, (struct sockaddr *)&address_tc, sizeof(address_tc)) < 0 )
+		if(bind(m_nStatServ, (struct sockaddr *)&m_sAddrStat, sizeof(m_sAddrStat)) < 0 )
 		{
 			perror("[server.cpp:setup] tc bind failed:");
 			exit(EXIT_FAILURE);
 		}
 
 		#ifdef debug
-		tm_ip = inet_ntoa(address_tc.sin_addr);
+		tm_ip = inet_ntoa(m_sAddrStat.sin_addr);
 		printf("[server.cpp:setup] bind successfull on %s:%u\n", tc_ip, ntohs(address_tc.sin_port));
 		#endif /* debug */
 
 
-		if(listen(server_tm, 3) < 0)
+		if(listen(m_nSeshServ, 3) < 0)
 		{
 			perror("[server.cpp:setup] listen:");
 			exit(EXIT_FAILURE);
@@ -123,7 +133,7 @@ namespace server{
 		#endif /* debug */
 
 
-		if(listen(server_tc, 3) < 0)
+		if(listen(m_nStatServ, 3) < 0)
 		{
 			perror("[server.cpp:setup] listen:");
 			exit(EXIT_FAILURE);
@@ -133,50 +143,85 @@ namespace server{
 		#endif /* debug */
 
 
-		if((tm_socket = accept(server_tm, (struct sockaddr *)&address_tm, (socklen_t*)&addrlen)) < 0)
+		if((m_nSeshSock = accept(m_nSeshServ, (struct sockaddr *)&address_tm, (socklen_t*)&addrlen)) < 0)
 		{
 			perror("[server.cpp:setup] tm accept:");
 			exit(EXIT_FAILURE);
 		}
-		else if(tm_socket != 0)
+		else if(m_nSeshSock != 0)
 		{
 			#ifdef debug
 			printf("[server.cpp:setup] Connection accepted on tm socket!\n");
 			#endif /* debug */
 		}
-		if((tc_socket = accept(server_tc, (struct sockaddr *)&address_tc, (socklen_t*)&addrlen)) < 0)
+		if((m_nStatSock = accept(m_nStatServ, (struct sockaddr *)&address_tc, (socklen_t*)&addrlen)) < 0)
 		{
 			perror("[server.cpp:setup] tc accept");
 			exit(EXIT_FAILURE);
 		}
-		else if(tc_socket != 0)
+		else if(m_nStatSock != 0)
 		{
 			#ifdef debug
 			printf("[server.cpp:setup] Connection accepted on tc socket!\n");
 			#endif /* debug */
 		}
 
-		// Reading value from tc_socket to buffer, returns bytes read
-		valread = read(tc_socket, buffer, 1024);
-	    uint8_t *buff_ptr = (uint8_t *)malloc(sizeof(buffer));
-	    memcpy(buff_ptr, &buffer, valread);
+		// Reading value from m_nStatSock to buffer, returns bytes read
+		valread = read(m_nSeshSock, m_cBuffer, 1024);			// First session frame will arrive
+		std::cout << "[server.cpp:setup] received bytes: " << valread << std::endl;
+	    uint8_t *pnBuffer = (uint8_t *)malloc(sizeof(m_cBuffer));	// remember to free pnBuffer when done
+	    memcpy(pnBuffer, &m_cBuffer, valread);
 
+	    uint32_t m_nMsglen;
+	    uint32_t m_nMsgType;
+	    uint32_t m_nTabType;
+
+	    tmtc::DecapsulateSession(pnBuffer, m_nMsglen, m_nMsgType, m_nTabType);
+	    //  decision to call setconftable should be here
+	    server::SetConfTable(pnBuffer, m_nMsglen, m_nTabType);
+	    // this buffer pointer should be sent to the Sync function for preamble detection
+	    // the next step would be to determine what type of message has arrived but let's implement that later
 	    // function call to sync()
+	    // tmtc::DecapsulateSession(pnBuffer, )
 
-	    tmtc::telecommand::decapsulate(buff_ptr, 0);
+	    // next frame to arrive will be the status request
 
-	    // sizeof = strlen + 1
-	    char tm_buff[] = "12345678910";
+	    valread = read(m_nStatSock, m_cBuffer, 1024);		// assuming a status request frame arrives
+	    std::cout << "[server.cpp:setup] received bytes: " << valread << std::endl;
+	    memcpy(pnBuffer, &m_cBuffer, valread);
+		tmtc::DecapsulateStatus(pnBuffer, m_nMsglen, m_nMsgType, m_nTabType);
+	    std::cout << "[server.cpp:setup] MsgType: " << m_nMsgType << std::endl;
+	    std::cout << "[server.cpp:setup] TabType: " << m_nTabType << std::endl;
 
-	    uint8_t *tm_ptr = (uint8_t *)malloc(strlen(tm_buff) * sizeof(uint8_t));
-	    // uint8_t *
-	    tm_ptr = tmtc::telemetry::encapsulate(tm_buff, (strlen(tm_buff)));
-	    tmtc::telemetry::decapsulate(tm_ptr);
+	    if(m_nMsgType == 10 && m_nTabType == 1)
+	    {
+	    	std::cout << "[server.cpp:setup] Msg 10, Tab 10 lookup " << std::endl;
+	    	UL_TABLE *m_spTable;
+	    	m_spTable = &sUlTable;
+	    	send(m_nStatSock, m_spTable, sizeof(UL_TABLE), 0);		
+	    }
 
-		send(tm_socket, tm_ptr, (sizeof(TM_HEADER) + strlen(tm_buff) + sizeof(POSTAMBLE)), 0);
-
+	    free(pnBuffer);
 		return 0;
 	}
+
+	// Called after DecapsulateSession()
+	void SetConfTable(uint8_t *pnData, uint32_t nMsglen, uint32_t nTabType)
+	{
+		switch(nTabType)
+		{
+			case 0:
+			return;
+
+			case 1:
+			// UL CONF TABLE RECEIVED
+			memcpy(&sUlTable, pnData, nMsglen);
+			// safe handling of global variables would be good
+			return;
+		}
+		return;
+	}
+
 	// WIP WIP WIP WIP
 	void FindSyncMarker(const uint8_t *in, uint32_t nDataLen)
 	{
@@ -231,7 +276,7 @@ namespace server{
 		*/
 		
 
-		return
+		return;
 	}
 } /* server */
 

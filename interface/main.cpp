@@ -95,29 +95,18 @@ int main()
     sUlTable.nModScheme = 1;
     sUlTable.fBitRate = 9600;
     sUlTable.nPlopVersion = 1;
-    sUlTable.nCarFreq = 435000000;
-    sUlTable.nSubCarFreq = 434950000;
-    sUlTable.nSubCarType = 1;
-    sUlTable.nIdlePat = 1;
-    sUlTable.nIdlePatLen = 1;
-    sUlTable.nCmm1Check = 1;
-    sUlTable.nCmm1SetTime = 1;
-    sUlTable.nCmm1Offset = 1;
-    sUlTable.nCmm1Mask = 1;
-    sUlTable.nCmm2Check = 1;
-    sUlTable.nCmm2SetTime = 1;
-    sUlTable.nCmm2Offset = 1;
-    sUlTable.nCmm2Mask = 1;
-    sUlTable.nPostAmble = POSTAMBLE;
+    sUlTable.nPostamble = POSTAMBLE;
 
     std::cout << "Uplink table set"  << std::endl;
 
-    tmtc::telecommand::EncapsulateTCACK(pnPacket, 1, 0, nInData);
+    /* tmtc::telecommand::EncapsulateTCACK(pnPacket, 1, 0, nInData);
     std::cout << "TC ACK Encapsulated"  << std::endl;
     tmtc::telecommand::DecapsulateTCACK(pnPacket, m_nAckCode, nOutData);
-
+	
     std::cout << "Ack code: " << m_nAckCode << std::endl;
+	*/
 
+	server::setup();
 
 	return 0;
 }
