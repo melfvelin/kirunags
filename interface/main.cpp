@@ -108,7 +108,7 @@ int main()
     std::cout << "Ack code: " << m_nAckCode << std::endl;
 	*/
 
-	server::setup();
+	server::SetupMulti();
 
 	return 0;
 }

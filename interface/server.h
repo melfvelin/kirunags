@@ -12,6 +12,7 @@
 #include <string>
 #include <cstring>
 #include <arpa/inet.h>
+#include <poll.h>
 #include "tables.h"
 #include "SetConf.h"
 #include "ServFuncs.h"
@@ -24,6 +25,7 @@
 namespace server
 {
 	int setup(void);
+	int SetupMulti(void);
 }
 
 // global variable declaration 

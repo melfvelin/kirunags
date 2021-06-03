@@ -7,6 +7,7 @@
 #include <string>
 #include <cstring>
 #include <arpa/inet.h>
+#include <sys/time.h>
 
 #include "server.h"
 #include "tmtc.h"
@@ -106,7 +107,7 @@ namespace server{
 		#ifdef debug
 			printf("[server.cpp:setup] Server listening for connections on %i\n", TC_PORT);
 		#endif /* debug */
-
+			printf("[server.cpp:setup] Server listening for connections \n");
 
 		if((m_nSeshSock = accept(m_nSeshServ, (struct sockaddr *)&m_sAddrSesh, (socklen_t*)&addrlen)) < 0)
 		{
@@ -124,7 +125,7 @@ namespace server{
 			perror("[server.cpp:setup] tc accept");
 			exit(EXIT_FAILURE);
 		}
-		
+			printf("[server.cpp:setup] Server accepted connections \n");
 		// Reading value from m_nStatSock to buffer, returns bytes read
 		valread = read(m_nSeshSock, m_cBuffer, 1024);			// First session frame will arrive
 
@@ -236,6 +237,188 @@ namespace server{
 
 		return;
 	}
-} /* server */
+
+	int SetupMulti()
+	{
+
+		int m_nOpt = 1;
+		int m_nMasterSock;
+		int m_nAddrlen = sizeof(sockaddr_in);
+		int m_nNewSock;
+		int m_naClientSock[10];
+		int m_nMaxClients = 10;
+		int m_nActivity;
+		int m_nIndex;
+		int m_nValread;
+		int m_nSockDesc[4];
+		int m_nMaxSockDesc;
+		int m_nResult;
+		struct sockaddr_in m_sAddr[4];
+		uint8_t m_nBuff[1024];
+		uint32_t m_nMsgType;
+
+		struct pollfd m_sPollfds[4];
+
+		memset(m_sPollfds, 0, sizeof(m_sPollfds));
+		
+		// assign port numbers to port array
+		for(int i = 0; i < 4; i++)
+		{
+			m_sAddr[i].sin_family = AF_INET;  
+    		m_sAddr[i].sin_addr.s_addr = INADDR_ANY;  
+    		m_sAddr[i].sin_port = htons((2001 + i)); 
+		}
+
+		
+
+		fd_set readfds;
+
+		// initialize all clients to 0
+		for(int i = 0; i < m_nMaxClients; i++)
+		{
+			m_naClientSock[i] = 0;
+		}
+
+		
+		for(int i = 0; i < 4; i++)
+		{
+			if( (m_nSockDesc[i] = socket(AF_INET , SOCK_STREAM , 0)) == 0 )
+			{
+				perror("socket failed");  
+        		exit(EXIT_FAILURE);
+			}
+		}
+		//if( setsockopt(m_nMasterSock, SOL_SOCKET, SO_REUSEADDR, (char *)&m_nOpt, sizeof(m_nOpt)) < 0 )  
+    	//{  
+       // 	perror("setsockopt");  
+       // 	exit(EXIT_FAILURE);  
+    	//}  
+
+    	// bind all sockets in a loop
+    	for(int i = 0; i <4; i++)
+    	{
+    		if (bind(m_nSockDesc[i], (struct sockaddr *)&m_sAddr[i], sizeof(m_sAddr[0]))<0)  
+    		{  
+        		std::cout << "Index = " << i << std::endl;
+        		perror("bind failed");  
+        		exit(EXIT_FAILURE);  
+    		}	
+    	}
+
+    	// listen on all sockets in a loop
+    	for(int i = 0; i <4; i++)
+    	{
+    		if(listen(m_nSockDesc[i], 4) < 0)
+    		{
+    			std::cout << "Index = " << i << std::endl;
+    			perror("listen failed");  
+        		exit(EXIT_FAILURE); 
+    		}
+    	}
+
+		for(int i = 0; i <4; i++)
+    	{
+    		if((accept(m_nSockDesc[i], (struct sockaddr *)&m_sAddr[i], (socklen_t *)&m_nAddrlen)) < 0)
+    		{
+    			std::cout << "Index = " << i << std::endl;
+    			perror("accept failed");  
+        		exit(EXIT_FAILURE); 
+    		}
+    	}
+    	std::cout << "All connections accepted " << std::endl;
+    	// int accept(int sockfd, struct sockaddr *restrict addr, socklen_t *restrict addrlen);
+    	/*
+    	for(int i = 0; i <4; i++)
+    	{
+    		m_sPollfds[i].fd = m_nSockDesc[i];
+    	}
+    	std::cout << "Successfully ported file descriptors to poll struct" << std::endl;
+    	// int poll(struct pollfd *fds, nfds_t nfds, int timeout);
+    	m_nResult = poll(m_sPollfds, 4, 5000);
+    	std::cout << "poll finished" << std::endl;	
+    	if(m_nResult == 0)
+    	{
+    		std::cout << "poll timeout" << std::endl;	
+    	}
+    	else if(m_nResult < 0)
+    	{
+    		std::cout << "poll error" << std::endl;		
+    	}
+    	else
+    	{
+    		std::cout << "Successful call to poll" << std::endl;	
+    		m_nIndex = 0;
+    		while ((m_nValread = read(m_nSockDesc[m_nIndex], m_nBuff, 1024)) == 0)
+    		{
+    			std::cout << "Empty m_nValread" << std::endl;		
+    			m_nIndex++;
+    		}
+    		m_nMsgType = tmtc::GetMsgType(m_nBuff, m_nValread);
+		 POLL USAGE ENDS HERE */
+    		m_nIndex = 0;
+    		int m_nNewRead = 0;
+
+
+    		while(1)
+    		{
+    			while(m_nValread == m_nNewRead)
+    			{
+    				while(m_nIndex < 4)
+    				{
+    					m_nNewRead = read(m_nSockDesc[m_nIndex], m_nBuff, 1024);
+    					m_nIndex++;
+    				}
+    				GetMsgType(m_nBuff, m_nNewRead);
+    				m_nIndex = 0;    				
+    			}
+    			m_nValread = m_nNewRead;
+    		}
+
+    		switch(m_nMsgType)
+    		{
+    			case 0:
+    				std::cout << "Decoded MsgType: " << m_nMsgType << std::endl;		
+    				break;
+    			case 1:
+    				std::cout << "Decoded MsgType: " << m_nMsgType << std::endl;
+    				break;
+    			case 2:
+    				std::cout << "Decoded MsgType: " << m_nMsgType << std::endl;
+    				break;
+    			case 10:
+    				std::cout << "Decoded MsgType: " << m_nMsgType << std::endl;
+    				break;
+    			case 11:
+    				std::cout << "Decoded MsgType: " << m_nMsgType << std::endl;
+    				break;	
+    			default:
+    			break;
+
+    		}
+
+    	}
+    	
+
+    	
+
+    	// valread = read(m_nSeshSock, m_cBuffer, 1024);			// First session frame will arrive
+    	return 0;
+	}
+
+	} /* server */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

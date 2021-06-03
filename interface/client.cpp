@@ -22,35 +22,72 @@ int main(int argc, char const *argv[])
     int valread;       
     int m_nSeshServ;
     int m_nStatServ;
+    int m_nTcSock = 0;
+    int m_nTmSock = 0;
+
     int m_nStatSock = 0;
     int m_nSeshSock = 0;
     struct sockaddr_in m_sAddrSesh;
     struct sockaddr_in m_sAddrStat;
+    struct sockaddr_in m_sAddrTc;
+    struct sockaddr_in m_sAddrTm;
       
     char buffer[1024] = {0};
     
+    if ((m_nTmSock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        printf("\n TM creation error \n");
+        return -1;
+    }
+
+    if ((m_nTcSock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+    {
+        printf("\n TC socket creation error \n");
+        return -1;
+    }
+
     if ((m_nSeshSock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        printf("\n Socket creation error \n");
+        printf("\n Session Socket creation error \n");
         return -1;
     }
 
     if ((m_nStatSock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
-        printf("\n Socket2 creation error \n");
+        printf("\n Status Socket creation error \n");
         return -1;
     }
 
+
+
+    m_sAddrTm.sin_family = AF_INET;
+    m_sAddrTm.sin_port = htons(2001);
+
+    m_sAddrTc.sin_family = AF_INET;
+    m_sAddrTc.sin_port = htons(2002);
+
     m_sAddrSesh.sin_family = AF_INET;
-    m_sAddrSesh.sin_port = htons(2005);
+    m_sAddrSesh.sin_port = htons(2003);
 
     m_sAddrStat.sin_family = AF_INET;
-    m_sAddrStat.sin_port = htons(2006);
+    m_sAddrStat.sin_port = htons(2004);
 
     // Convert IPv4 and IPv6 addresses from text to binary form
-    if(inet_pton(AF_INET, "127.0.0.1", &m_sAddrSesh.sin_addr)<=0)
+    if(inet_pton(AF_INET, "127.0.0.1", &m_sAddrTm.sin_addr)<=0)
     {
         printf("\nInvalid TM address/ Addrescis not supported \n");
+        return -1;
+    }
+
+    if(inet_pton(AF_INET, "127.0.0.1", &m_sAddrTc.sin_addr)<=0)
+    {
+        printf("\nInvalid TC address/ Address not supported \n");
+        return -1;
+    }
+
+    if(inet_pton(AF_INET, "127.0.0.1", &m_sAddrSesh.sin_addr)<=0)
+    {
+        printf("\nInvalid TC address/ Address not supported \n");
         return -1;
     }
 
@@ -60,15 +97,29 @@ int main(int argc, char const *argv[])
         return -1;
     }
 
-    if (connect(m_nSeshSock, (struct sockaddr *)&m_sAddrSesh, sizeof(m_sAddrSesh)) < 0)
+    
+    if (connect(m_nTmSock, (struct sockaddr *)&m_sAddrTm, sizeof(m_sAddrTm)) < 0)
     {
         printf("\nTM Connection Failed \n");
         return -1;
     }
     
-    if (connect(m_nStatSock, (struct sockaddr *)&m_sAddrStat, sizeof(m_sAddrStat)) < 0)
+    
+    if (connect(m_nTcSock, (struct sockaddr *)&m_sAddrTc, sizeof(m_sAddrTc)) < 0)
     {
         printf("\nTC Connection Failed \n");
+        return -1;
+    }
+    
+    if (connect(m_nSeshSock, (struct sockaddr *)&m_sAddrSesh, sizeof(m_sAddrSesh)) < 0)
+    {
+        printf("\nSession Connection Failed \n");
+        return -1;
+    }
+    
+    if (connect(m_nStatSock, (struct sockaddr *)&m_sAddrStat, sizeof(m_sAddrStat)) < 0)
+    {
+        printf("\nStatus Connection Failed \n");
         return -1;
     }
       
