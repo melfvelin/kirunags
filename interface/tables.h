@@ -12,8 +12,8 @@
 typedef struct __attribute__ ((packed)) _TM_HEADER {
     uint32_t nPreamble;       	/* Packet preamble */
     uint32_t nMsglen;      		/* Total packet length */
-    uint64_t nTimeTag;       	/* Telemetry time-tag */
     uint32_t nMsgType;       	/* Message type */
+    uint64_t nTimeTag;       	/* Telemetry time-tag */
     uint32_t nScrambler;       	/* CCSDS scrambler */
     uint32_t nFEC;           	/* FEC code */
     uint32_t nFrameFormat;      /* Frame format */
@@ -33,8 +33,8 @@ typedef struct __attribute__ ((packed)) _TC_HEADER {
 typedef struct __attribute__ ((packed)) _TCACK_HEADER {
     uint32_t nPreamble;         /* Packet preamble */
     uint32_t nMsglen;           /* Total packet length */
-    uint64_t nTimeTag;          /* Telemetry time-tag */
     uint32_t nMsgType;          /* Message type */
+    uint64_t nTimeTag;          /* Telemetry time-tag */
     uint32_t nScrambler;        /* CCSDS scrambler */
     uint32_t nFEC;              /* FEC code */
     uint32_t nFrameFormat;      /* Frame format */
@@ -49,15 +49,15 @@ typedef struct __attribute__ ((packed)) _TCACK_HEADER {
 typedef struct __attribute__ ((packed)) _TR_HEADER {
     uint32_t nPreamble;         /* Packet preamble */
     uint32_t nMsglen;           /* Total packet length */
-    uint32_t nTimeTag;          /* Transfer frame size */
     uint32_t nMsgType;          /* Message type */
+    uint32_t nTimeTag;          /* Transfer frame size */
 } TR_HEADER;
 
 typedef struct __attribute__ ((packed)) _ANT_HEADER {
     uint32_t nPreamble;         /* Packet preamble */
     uint32_t nMsglen;           /* Total packet length */
-    uint32_t nTimeTag;          /* Transfer frame size */
     uint32_t nMsgType;          /* Message type */
+    uint32_t nTimeTag;          /* Transfer frame size */
     float fSatID;               /* Spacecraft ID */
     float fAzimuth;             /* Azimuth */
     float fElevation;           /* Elevation */
@@ -66,8 +66,8 @@ typedef struct __attribute__ ((packed)) _ANT_HEADER {
 typedef struct __attribute__ ((packed)) _DOPP_HEADER {
     uint32_t nPreamble;         /* Packet preamble */
     uint32_t nMsglen;           /* Total packet length */
-    uint32_t nTimeTag;          /* Transfer frame size */
     uint32_t nMsgType;          /* Message type */
+    uint32_t nTimeTag;          /* Transfer frame size */
     float fSatID;               /* Spacecraft ID */
     float fRxFreq;              /* Receive Frequency */
     float fRxDoppler;           /* Received Doppler */
@@ -97,17 +97,12 @@ typedef struct __attribute__ ((packed)) _SESH_HEADER {
     uint32_t nTabType;          /* Table type */
 } SESH_HEADER;  // replaced for now by sending a conf table on the sesh port but used for decapsulation purposes
 
-/*  REQ TYPES
-    10 - DL TABLE
-    20 - UL TABLE
-    30 - ETC
-
-    With this format the session and status messages can use the same numbers, status request uses the number
-    the user wants to retrieve, status response uses the same number as "Message type" (should maybe be called table type not to conflict)
-    for that table. Session can use it by specifying what table it is uploading. It could be easier to manage the session payload data
-    if the pointer used was a uint32_t pointer instead
-
-*/ 
+typedef struct __attribute__ ((packed)) _GEN_HEADER {
+    uint32_t nPreamble;         /* Packet preamble */
+    uint32_t nMsglen;           /* Total packet length */
+    uint32_t nMsgType;          /* Message type */
+    uint32_t nTabType;          /* Table type */
+} GEN_HEADER;  // replaced for now by sending a conf table on the sesh port but used for decapsulation purposes
 
 typedef struct __attribute__ ((packed)) _DL_TABLE {
     uint32_t nPreamble;         /* Packet preamble */
@@ -120,6 +115,7 @@ typedef struct __attribute__ ((packed)) _DL_TABLE {
     uint32_t nLineCode;         /* Line code */
     uint32_t nModScheme;        /* Modulation scheme */
     float fBitRate;             /* Bit rate */
+    uint32_t nPostamble;        /* Postamble */
 } DL_TABLE;
 
 typedef struct __attribute__ ((packed)) _UL_TABLE {

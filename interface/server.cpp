@@ -1,5 +1,5 @@
 // This is the TCP/IP server
-/* #include <unistd.h>
+#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/socket.h>
@@ -8,15 +8,11 @@
 #include <cstring>
 #include <arpa/inet.h>
 
-#define TM_PORT 2001
-#define TC_PORT 2002
-#define DO_PORT 2007
-#define DE_PORT 2009
-*/
 #include "server.h"
 #include "tmtc.h"
 #include "tables.h"
-//#include "tmtc.h"
+#include "SetConf.h"
+
 
 /*	uncomment for debug output
 #ifndef debug
@@ -34,18 +30,12 @@ namespace server{
 		int m_nStatServ;
 		int m_nStatSock = 0;
 		int m_nSeshSock = 0;
-		int tc_socket = 0;
-		int tm_socket = 0;
 		int valread;
 		struct sockaddr_in m_sAddrSesh;
 		struct sockaddr_in m_sAddrStat;
-		struct sockaddr_in address_tm;
-		struct sockaddr_in address_tc;
 		int opt = 1;
-		int addrlen = sizeof(address_tm);
-		char *tc_ip;
-		char *tm_ip;
-
+		int addrlen = sizeof(sockaddr_in);
+		
 		// Init char array of zeros
 		char m_cBuffer[1024] = {0};
 
@@ -77,20 +67,6 @@ namespace server{
 			exit(EXIT_FAILURE);
 		}
 
-		// with inet_aton it's easy to change from localhost to other IP adresses
-		/*
-		if(inet_aton("127.0.0.1", &address_tm.sin_addr) == 0)
-		{
-			perror("[server.cpp:setup] aton error");
-			exit(EXIT_FAILURE);
-		}
-		// with inet_aton it's easy to change from localhost to other IP adresses
-		if(inet_aton("127.0.0.1", &address_tc.sin_addr) == 0)
-		{
-			perror("[server.cpp:setup] aton error");
-			exit(EXIT_FAILURE);
-		}
-		*/
 		m_sAddrSesh.sin_addr.s_addr = INADDR_ANY;
 		m_sAddrStat.sin_addr.s_addr = INADDR_ANY;
 		m_sAddrSesh.sin_family = AF_INET;
@@ -105,23 +81,12 @@ namespace server{
 			exit(EXIT_FAILURE);
 		}
 
-		#ifdef debug
-		tc_ip = inet_ntoa(m_sAddrSesh.sin_addr);
-		printf("[server.cpp:setup] bind successfull on %s:%u\n", tm_ip, ntohs(address_tm.sin_port));
-		#endif /* debug */
-
 		// Attempting to bind tc address
 		if(bind(m_nStatServ, (struct sockaddr *)&m_sAddrStat, sizeof(m_sAddrStat)) < 0 )
 		{
 			perror("[server.cpp:setup] tc bind failed:");
 			exit(EXIT_FAILURE);
 		}
-
-		#ifdef debug
-		tm_ip = inet_ntoa(m_sAddrStat.sin_addr);
-		printf("[server.cpp:setup] bind successfull on %s:%u\n", tc_ip, ntohs(address_tc.sin_port));
-		#endif /* debug */
-
 
 		if(listen(m_nSeshServ, 3) < 0)
 		{
@@ -143,7 +108,7 @@ namespace server{
 		#endif /* debug */
 
 
-		if((m_nSeshSock = accept(m_nSeshServ, (struct sockaddr *)&address_tm, (socklen_t*)&addrlen)) < 0)
+		if((m_nSeshSock = accept(m_nSeshServ, (struct sockaddr *)&m_sAddrSesh, (socklen_t*)&addrlen)) < 0)
 		{
 			perror("[server.cpp:setup] tm accept:");
 			exit(EXIT_FAILURE);
@@ -154,20 +119,15 @@ namespace server{
 			printf("[server.cpp:setup] Connection accepted on tm socket!\n");
 			#endif /* debug */
 		}
-		if((m_nStatSock = accept(m_nStatServ, (struct sockaddr *)&address_tc, (socklen_t*)&addrlen)) < 0)
+		if((m_nStatSock = accept(m_nStatServ, (struct sockaddr *)&m_sAddrStat, (socklen_t*)&addrlen)) < 0)
 		{
 			perror("[server.cpp:setup] tc accept");
 			exit(EXIT_FAILURE);
 		}
-		else if(m_nStatSock != 0)
-		{
-			#ifdef debug
-			printf("[server.cpp:setup] Connection accepted on tc socket!\n");
-			#endif /* debug */
-		}
-
+		
 		// Reading value from m_nStatSock to buffer, returns bytes read
 		valread = read(m_nSeshSock, m_cBuffer, 1024);			// First session frame will arrive
+
 		std::cout << "[server.cpp:setup] received bytes: " << valread << std::endl;
 	    uint8_t *pnBuffer = (uint8_t *)malloc(sizeof(m_cBuffer));	// remember to free pnBuffer when done
 	    memcpy(pnBuffer, &m_cBuffer, valread);
@@ -176,50 +136,48 @@ namespace server{
 	    uint32_t m_nMsgType;
 	    uint32_t m_nTabType;
 
-	    tmtc::DecapsulateSession(pnBuffer, m_nMsglen, m_nMsgType, m_nTabType);
+	    if(tmtc::GetMsgType(pnBuffer, valread) == 10)
+	    {
+	    	ServFuncs::DecapsulateSession(pnBuffer, m_nMsglen, m_nMsgType, m_nTabType);	
+	    }
+	    
+	    if(m_nTabType == 1)
+	    {
+	    	SetConfTable(pnBuffer, m_nMsglen, m_nTabType);	
+	    }
+
 	    //  decision to call setconftable should be here
-	    server::SetConfTable(pnBuffer, m_nMsglen, m_nTabType);
-	    // this buffer pointer should be sent to the Sync function for preamble detection
-	    // the next step would be to determine what type of message has arrived but let's implement that later
-	    // function call to sync()
-	    // tmtc::DecapsulateSession(pnBuffer, )
-
-	    // next frame to arrive will be the status request
-
+	    
+	    
 	    valread = read(m_nStatSock, m_cBuffer, 1024);		// assuming a status request frame arrives
 	    std::cout << "[server.cpp:setup] received bytes: " << valread << std::endl;
 	    memcpy(pnBuffer, &m_cBuffer, valread);
-		tmtc::DecapsulateStatus(pnBuffer, m_nMsglen, m_nMsgType, m_nTabType);
-	    std::cout << "[server.cpp:setup] MsgType: " << m_nMsgType << std::endl;
-	    std::cout << "[server.cpp:setup] TabType: " << m_nTabType << std::endl;
 
-	    if(m_nMsgType == 10 && m_nTabType == 1)
+	    if(tmtc::GetMsgType(pnBuffer, valread) == 11)
 	    {
-	    	std::cout << "[server.cpp:setup] Msg 10, Tab 10 lookup " << std::endl;
-	    	UL_TABLE *m_spTable;
-	    	m_spTable = &sUlTable;
-	    	send(m_nStatSock, m_spTable, sizeof(UL_TABLE), 0);		
-	    }
+	    	ServFuncs::DecapsulateStatus(pnBuffer, m_nMsglen, m_nMsgType, m_nTabType);
+	    	std::cout << "[server.cpp:setup] MsgType: " << m_nMsgType << std::endl;
+	    	std::cout << "[server.cpp:setup] TabType: " << m_nTabType << std::endl;
+	    	
+	    	switch(m_nTabType)
+	    	{
+	    		case 0:
+	    		return -1;
 
+	    		case 1:
+	    		UL_TABLE *m_spTable;
+	    		m_spTable = &sUlTable;
+	    		send(m_nStatSock, m_spTable, sizeof(UL_TABLE), 0);			
+	    		break;
+	    	}
+	    }
+	    else
+	    {
+	    	std::cout << "getMsgType invalid return value" << std::endl;
+	    }
+		
 	    free(pnBuffer);
 		return 0;
-	}
-
-	// Called after DecapsulateSession()
-	void SetConfTable(uint8_t *pnData, uint32_t nMsglen, uint32_t nTabType)
-	{
-		switch(nTabType)
-		{
-			case 0:
-			return;
-
-			case 1:
-			// UL CONF TABLE RECEIVED
-			memcpy(&sUlTable, pnData, nMsglen);
-			// safe handling of global variables would be good
-			return;
-		}
-		return;
 	}
 
 	// WIP WIP WIP WIP

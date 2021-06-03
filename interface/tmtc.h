@@ -17,8 +17,8 @@
 namespace tmtc
 {
 
-   	namespace telemetry
-   	{
+   	// namespace telemetry
+   	//{
          void EncapsulateTM(uint8_t *rnOut, uint32_t nScrambler, uint32_t nFEC, 
          uint32_t nFrameFormat, uint32_t nCaduSize, uint8_t *rnData);
          void DecapsulateTM(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType,
@@ -28,16 +28,16 @@ namespace tmtc
    		uint64_t GenIRIGBTag();
    		int DecimalToBCD(int decimal);
    		int BCDToDecimal(int bcd);
-   	}
+   	//}
    	
-   	namespace telecommand
-   	{ 
+   	//namespace telecommand
+   	//{ 
          void EncapsulateTC(uint8_t *pnOut, uint32_t nCltuSize, uint8_t *pnData);
          void DecapsulateTC(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType,
          uint32_t& nCltuSize, uint8_t *pnData);
          void EncapsulateTCACK(uint8_t *pnOut, uint32_t nCltuSize, uint32_t nAckCode, uint8_t *pnData);
          void DecapsulateTCACK(uint8_t *pnPacket, uint32_t& nAckCode, uint8_t *pnData);
-   	}
+   	// }
 
       void EncapsulateTrack(uint8_t *pnOut, uint32_t nPayloadSize, uint8_t *pnPayload);
       void DecapsulateTrack(uint8_t *pnPacket, uint32_t& nMsglen, uint64_t& nTimeTag, uint32_t& nMsgType, uint8_t *pnPayload);
@@ -52,7 +52,7 @@ namespace tmtc
       void DecapsulateStatus(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType, uint32_t& nTabType);
       void EncapsulateSession(uint8_t *pnOut, uint32_t nTabType, uint8_t *pnPayload);
       void DecapsulateSession(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType, uint32_t& nTabType);
-      
+      int GetMsgType(uint8_t *pnData, uint32_t nValread);      
 
       namespace parse
       {
@@ -65,7 +65,7 @@ namespace tmtc
 
 // global variable declaration 
 extern UL_TABLE sUlTable;
+extern DL_TABLE sDlTable;
 
 
-
-#endif /* TABLES_H */
+#endif /* TMTC_H */

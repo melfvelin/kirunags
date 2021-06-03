@@ -26,18 +26,9 @@ int main(int argc, char const *argv[])
     int m_nSeshSock = 0;
     struct sockaddr_in m_sAddrSesh;
     struct sockaddr_in m_sAddrStat;
-
-
-
-    struct sockaddr_in serv_addr;
-    struct sockaddr_in tm_server;
-    struct sockaddr_in tc_server;
-    char const *hello = "Hello from client";
-    char const *telec = "This is a telecommand";
+      
     char buffer[1024] = {0};
-    char *tc_ip;
-    char *tm_ip;
-
+    
     if ((m_nSeshSock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
         printf("\n Socket creation error \n");
@@ -74,23 +65,13 @@ int main(int argc, char const *argv[])
         printf("\nTM Connection Failed \n");
         return -1;
     }
-    #ifdef debug
-        tm_ip = inet_ntoa(m_sAddrSesh.sin_addr);
-        printf("Client: attempting to connect on %s:%u\n", tm_ip, ntohs(m_sAddrSesh.sin_port));
-    #endif /* debug */
-
+    
     if (connect(m_nStatSock, (struct sockaddr *)&m_sAddrStat, sizeof(m_sAddrStat)) < 0)
     {
         printf("\nTC Connection Failed \n");
         return -1;
     }
-    #ifdef debug
-        tc_ip = inet_ntoa(m_sAddrStat.sin_addr);
-        printf("Client: attempting to connect on %s:%u\n", tc_ip, ntohs(m_sAddrStat.sin_port));
-    #endif /* debug */
-    
-
-    // tmtc::EncapsulateSession(pnOut, 1); // instead we make a local conf table to send
+      
     UL_TABLE m_sUlTable;
     UL_TABLE m_sUlTableReply;
     UL_TABLE *psUltable = &m_sUlTable;
@@ -112,22 +93,16 @@ int main(int argc, char const *argv[])
     std::cout << "[client.cpp:main] Attempted to send session frame: " << std::endl;
 
     uint8_t *pnOut = (uint8_t *)malloc(sizeof(STATUS_HEADER));
-    tmtc::EncapsulateStatus(pnOut, 1);
+    ClientFuncs::EncapsulateStatus(pnOut, 1);
     send(m_nStatSock, pnOut, sizeof(STATUS_HEADER), 0);        // Step 2
     free(pnOut);
 
     // Client only receives conf tables on status socket
     valread = read(m_nStatSock, buffer, 1024);              // Step 3
     std::cout << "[client.cpp:main] received bytes: " << valread << std::endl;
-    // pnOut = &buffer;
     memcpy(&m_sUlTableReply, &buffer, valread);
     std::cout << "Status reply:" << std::endl << "Table type: " << m_sUlTableReply.nTabType << std::endl;
     std::cout << "Mod scheme: " << m_sUlTableReply.nModScheme << std::endl;
 
-    //tmtc::telemetry::DecapsulateTM(pnOut, more variables);    
-    // free(pnOut);
-    //memcpy(tm_ptr, &buffer, valread);
-    
-    //printf("Received TM message: %s\n",buffer );
     return 0;
 }

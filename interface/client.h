@@ -10,6 +10,7 @@
 #include <iostream>
 #include "tables.h"
 #include "tmtc.h"
+#include "ClientFuncs.h"
 
 #define TM_PORT 2001
 #define TC_PORT 2002
