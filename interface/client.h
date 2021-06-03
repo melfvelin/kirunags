@@ -19,6 +19,7 @@
 namespace client
 {
 	uint8_t *makeTC_frame(const char *message, uint32_t message_len);
+	void grc_connect(void);
 }
 
 #endif /* CLIENT_H */
