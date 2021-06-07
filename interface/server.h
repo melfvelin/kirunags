@@ -26,6 +26,7 @@ namespace server
 {
 	int setup(void);
 	int SetupMulti(void);
+	void SetupTest();
 }
 
 // global variable declaration 

@@ -178,4 +178,120 @@ namespace ServFuncs
 		return;
 	 }
 
+	int MsgHandler(int nSockDesc, uint8_t *pnBuffer, uint32_t& nValread)
+	{
+		static uint32_t m_nMsglen;
+		static uint64_t m_nTimeTag;
+		static uint32_t m_nCaduSize;
+		static uint32_t m_nCltuSize;
+		static uint32_t m_nScrambler;
+		static uint32_t m_nFEC;
+		static uint32_t m_nFrameFormat;
+		static uint32_t m_nAckCode;
+		static uint32_t m_nTabType;
+		uint8_t *m_pnData;
+		uint8_t *m_pnPacket;
+		static float satid;
+		static float az = 0.0;
+		static float el = 0.0;
+		static float rxfreq = 0;
+		static float rxdopp = 0;
+		static float txfreq = 0;
+		static float txdopp = 0;
+		uint32_t m_nMsgType = tmtc::GetMsgType(pnBuffer, nValread);
+
+		if(m_nMsgType < 0)
+		{
+			std::cout << "Invalid message type!" << std::endl;
+			return -1;
+		}
+
+		switch(m_nMsgType)
+		{
+			case 0:
+			// TM frame
+			//ServFuncs::DecapsulateTM()
+				std::cout << "TM Frame decode start" << std::endl;
+				break;
+			case 1:
+				std::cout << "TC Frame decode start" << std::endl;
+				m_pnData = (uint8_t *)malloc(sizeof(uint64_t));
+				ServFuncs::DecapsulateTC(pnBuffer, m_nMsglen, m_nMsgType, m_nCltuSize, m_pnData);
+				if(m_nCltuSize > 0)
+				{
+					m_pnPacket = (uint8_t *)malloc(sizeof(TCACK_HEADER) + m_nCltuSize + sizeof(uint32_t));
+					// TC accepted, send back TC ACK
+					ServFuncs::EncapsulateTCACK(m_pnPacket, m_nCltuSize, 2, m_pnData);		// Encapsulate should return bytes encapsulated
+					memcpy(pnBuffer, m_pnPacket, (sizeof(TCACK_HEADER) + m_nCltuSize + sizeof(uint32_t)) );
+					
+					nValread = sizeof(TCACK_HEADER) + m_nCltuSize + sizeof(uint32_t);					
+					return 3;
+
+					if(send(nSockDesc, m_pnPacket, (sizeof(TCACK_HEADER) + m_nCltuSize + sizeof(uint32_t)), 0) < 0)
+					{
+						std::cout << "Send returned -1" << std::endl;		
+					}
+					free(m_pnPacket);
+					free(m_pnData);
+				}
+				break;	
+			case 2:
+				std::cout << "TC ACK Frame decode start" << std::endl;
+				break;
+			case 3:
+				std::cout << "Tracking Frame decode start" << std::endl;
+				break;
+			case 4:
+				std::cout << "Antenna Frame decode start" << std::endl;
+				break;
+			case 5:
+				std::cout << "Doppler Frame decode start" << std::endl;
+				break;
+			case 6:
+				std::cout << "Decoder Frame decode start" << std::endl;
+				break;
+			case 7:
+				std::cout << "RESERVED Frame" << std::endl;
+				break;
+			case 8:
+				std::cout << "RESERVED Frame" << std::endl;
+				break;
+			case 9:
+				std::cout << "RESERVED Frame" << std::endl;
+				break;
+			case 10:
+				std::cout << "Session Frame decode start" << std::endl;
+				ServFuncs::DecapsulateSession(pnBuffer, m_nMsglen, m_nMsgType, m_nTabType);
+				if(m_nTabType == 1)
+	    		{
+	    			SetConfTable(pnBuffer, m_nMsglen, m_nTabType);	
+	    		}	
+				break;
+			case 11:
+				std::cout << "Status Frame decode start" << std::endl;
+				ServFuncs::DecapsulateStatus(pnBuffer, m_nMsglen, m_nMsgType, m_nTabType);
+	    	
+	    		switch(m_nTabType)
+	    		{
+	    			case 0:
+	    			return -1;
+
+		    		case 1:
+		    		UL_TABLE *m_spTable;
+		    		m_spTable = &sUlTable;
+		    		std::cout << "Attempting to send back UL TABLE" << m_nTabType << std::endl;		
+		    		send(nSockDesc, m_spTable, sizeof(UL_TABLE), 0);		    
+		    		break;
+	    		}
+				break;
+
+			default:
+				std::cout << "Frame not reckognized" << std::endl;
+				return -1;
+
+		}
+
+		return 0;
+	}
+
 } 	/* ServFuncs */

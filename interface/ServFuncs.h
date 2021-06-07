@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include "tables.h"
 #include "tmtc.h"
+#include "SetConf.h"
 
 namespace ServFuncs
 {
@@ -30,6 +31,7 @@ namespace ServFuncs
    void EncapsulateDecoder(uint8_t *pnOut, uint32_t nPayloadLen, uint8_t *pnPayload);
    void DecapsulateStatus(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType, uint32_t& nTabType);
    void DecapsulateSession(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType, uint32_t& nTabType);
+   int MsgHandler(int nSockDesc, uint8_t *pnData, uint32_t& nValread);
 
 } /* ServFuncs */
 

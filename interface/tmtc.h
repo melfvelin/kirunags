@@ -53,6 +53,7 @@ namespace tmtc
       void EncapsulateSession(uint8_t *pnOut, uint32_t nTabType, uint8_t *pnPayload);
       void DecapsulateSession(uint8_t *pnPacket, uint32_t& nMsglen, uint32_t& nMsgType, uint32_t& nTabType);
       int GetMsgType(uint8_t *pnData, uint32_t nValread);      
+      
 
       namespace parse
       {

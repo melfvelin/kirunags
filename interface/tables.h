@@ -9,6 +9,10 @@
 #define PREAMBLE 0xA1B2C3D4
 #define POSTAMBLE ~0xA1B2C3D4
 
+#define TRUE   1 
+#define FALSE  0 
+#define PORT 8888
+
 typedef struct __attribute__ ((packed)) _TM_HEADER {
     uint32_t nPreamble;       	/* Packet preamble */
     uint32_t nMsglen;      		/* Total packet length */

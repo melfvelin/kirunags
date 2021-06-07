@@ -32,7 +32,7 @@ int main(int argc, char const *argv[])
     struct sockaddr_in m_sAddrTc;
     struct sockaddr_in m_sAddrTm;
       
-    char buffer[1024] = {0};
+    uint8_t buffer[1024] = {0};
     
     if ((m_nTmSock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
     {
@@ -67,10 +67,10 @@ int main(int argc, char const *argv[])
     m_sAddrTc.sin_port = htons(2002);
 
     m_sAddrSesh.sin_family = AF_INET;
-    m_sAddrSesh.sin_port = htons(2003);
+    m_sAddrSesh.sin_port = htons(8888);
 
     m_sAddrStat.sin_family = AF_INET;
-    m_sAddrStat.sin_port = htons(2004);
+    m_sAddrStat.sin_port = htons(8888);
 
     // Convert IPv4 and IPv6 addresses from text to binary form
     if(inet_pton(AF_INET, "127.0.0.1", &m_sAddrTm.sin_addr)<=0)
@@ -98,18 +98,17 @@ int main(int argc, char const *argv[])
     }
 
     
-    if (connect(m_nTmSock, (struct sockaddr *)&m_sAddrTm, sizeof(m_sAddrTm)) < 0)
-    {
-        printf("\nTM Connection Failed \n");
-        return -1;
-    }
+    // if (connect(m_nTmSock, (struct sockaddr *)&m_sAddrTm, sizeof(m_sAddrTm)) < 0)
+    // {
+    //     printf("\nTM Connection Failed \n");
+    //     return -1;
+    // }
     
     
-    if (connect(m_nTcSock, (struct sockaddr *)&m_sAddrTc, sizeof(m_sAddrTc)) < 0)
-    {
-        printf("\nTC Connection Failed \n");
-        return -1;
-    }
+    // if (connect(m_nTcSock, (struct sockaddr *)&m_sAddrTc, sizeof(m_sAddrTc)) < 0)
+    // {
+    //     printf("\nTC Connection Failed \n");
+    //     }
     
     if (connect(m_nSeshSock, (struct sockaddr *)&m_sAddrSesh, sizeof(m_sAddrSesh)) < 0)
     {
@@ -139,21 +138,60 @@ int main(int argc, char const *argv[])
     m_sUlTable.fBitRate = 1200;
     m_sUlTable.nPlopVersion = 0;
     m_sUlTable.nPostamble = POSTAMBLE;
+    uint8_t *pnOut;
+    uint8_t m_nTC = 'C';
+    uint8_t *m_pnData;
+    uint32_t m_nAckCode;
+    uint32_t m_nMsgLen;
 
-    send(m_nSeshSock, psUltable, sizeof(UL_TABLE), 0);        // Step 1
-    std::cout << "[client.cpp:main] Attempted to send session frame: " << std::endl;
-
-    uint8_t *pnOut = (uint8_t *)malloc(sizeof(STATUS_HEADER));
+    pnOut = (uint8_t *)malloc(sizeof(STATUS_HEADER));
     ClientFuncs::EncapsulateStatus(pnOut, 1);
+    std::cout << "Sending Status frame requesting uplink table" << std::endl;
+    send(m_nStatSock, pnOut, sizeof(STATUS_HEADER), 0);        // Step 0.1
+    free(pnOut);
+    // currently the modscheme always prints as 3, need to check out why
+    valread = read(m_nStatSock, buffer, 1024);              // Step 0.2
+    memcpy(&m_sUlTableReply, &buffer, valread);
+    std::cout << "Status reply, table type: " << m_sUlTableReply.nTabType << std::endl;
+    std::cout << "mod scheme: " << m_sUlTableReply.nModScheme << std::endl;
+
+
+    m_sUlTable.nModScheme = 5;
+    send(m_nSeshSock, psUltable, sizeof(UL_TABLE), 0);        // Step 1
+    std::cout << "Sending new uplink table (Session frame)" << std::endl;
+
+    pnOut = (uint8_t *)malloc(sizeof(STATUS_HEADER));
+    ClientFuncs::EncapsulateStatus(pnOut, 1);
+    std::cout << "Sending Status frame requesting uplink table" << std::endl;
     send(m_nStatSock, pnOut, sizeof(STATUS_HEADER), 0);        // Step 2
     free(pnOut);
 
     // Client only receives conf tables on status socket
     valread = read(m_nStatSock, buffer, 1024);              // Step 3
-    std::cout << "[client.cpp:main] received bytes: " << valread << std::endl;
     memcpy(&m_sUlTableReply, &buffer, valread);
-    std::cout << "Status reply:" << std::endl << "Table type: " << m_sUlTableReply.nTabType << std::endl;
-    std::cout << "Mod scheme: " << m_sUlTableReply.nModScheme << std::endl;
+    std::cout << "Status reply, table type: " << m_sUlTableReply.nTabType << std::endl;
+    std::cout << "mod scheme: " << m_sUlTableReply.nModScheme << std::endl;
+
+    //  Sending TC     
+    m_nMsgLen = sizeof(TC_HEADER) + sizeof(m_nTC) + sizeof(uint32_t);
+    m_pnData = &m_nTC;
+    pnOut = (uint8_t *)malloc(m_nMsgLen);
+    ClientFuncs::EncapsulateTC(pnOut, sizeof(m_nTC), m_pnData);
+    std::cout << "Sending TC" << std::endl;
+    send(m_nSeshSock, pnOut, m_nMsgLen, 0);                 // Step 4
+    free(pnOut);
+
+    // read to see if a TC ACK has arrived
+    std::cout << "Waiting for TC ACK" << std::endl;
+    valread = read(m_nSeshSock, buffer, 1024);              // Step 5
+
+    pnOut = &buffer[0];
+    ClientFuncs::DecapsulateTCACK(pnOut, m_nAckCode, m_pnData);
+    if(m_nAckCode == 2)
+    {
+        std::cout << "TC accepted (client side)" << std::endl;        
+    }
+
 
     return 0;
 }
