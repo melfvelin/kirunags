@@ -3,39 +3,38 @@
 */
 #include <bitset>
 #include <iostream>
-#include "server.h"
-#include "tmtc.h"
-#include "tables.h"
-#include "ClientFuncs.h"
 #include <iomanip>
+
+#include "server.h"
+#include "utils.h"
+#include "tables.h"
 
 // global variable declaration
 UL_TABLE sUlTable;
 DL_TABLE sDlTable;
 
+
+/* main() - assigns values to global tables and starts the TCP server
+* 	inputs: none
+*	outputs: none
+*	function calls: server::SetupServer()
+*	author: Martin Elfvelin
+*/
 int main()
 {
-	//tmtc::encapsulate("hello", sizeof("hello"));
-	uint8_t nDataSize = 8;
-	uint8_t *pnPacket = (uint8_t *)malloc(1024); // one KibiByte
-	uint8_t nInData[nDataSize];
-	uint8_t nOutData[nDataSize];
-
-	static uint32_t nMsglen;
-	static uint64_t nTimeTag;
-	static uint32_t nMsgType;
-	static uint32_t nScrambler;
-	static uint32_t nFEC;
-	static uint32_t nFrameFormat;
-	static uint32_t nCaduSize;
-	static uint32_t m_nAckCode;
-	static float satid;
-	static float az = 0.0;
-	static float el = 0.0;
-	static float rxfreq = 0;
-	static float rxdopp = 0;
-	static float txfreq = 0;
-	static float txdopp = 0;
+	// assigning values to global configs (uplink and downlink tables)
+	
+	sDlTable.nPreamble = PREAMBLE;
+    sDlTable.nMsglen = sizeof(DL_TABLE);
+    sDlTable.nMsgType = 10;
+    sDlTable.nTabType = 0;
+    sDlTable.nScrambler = 1;
+    sDlTable.nFEC = 1;
+    sDlTable.nFrameFormat = 1;
+    sDlTable.nLineCode = 1;
+    sDlTable.nModScheme = 1;
+    sDlTable.fBitRate = 9600;
+    sDlTable.nPostamble = POSTAMBLE;
 
 	sUlTable.nPreamble = PREAMBLE;
     sUlTable.nMsglen = sizeof(UL_TABLE);
@@ -50,26 +49,14 @@ int main()
     sUlTable.nPlopVersion = 1;
     sUlTable.nPostamble = POSTAMBLE;
 
-    std::cout << "Uplink table set modeschem: " << sUlTable.nModScheme << std::endl;
+    std::cout << "Uplink and downlink tables set" << std::endl;
 
-	server::SetupTest();
+	server::SetupServer();
 
-	// std::cout << "Parsed string: " << tmtc::parse::ParseMsgType(nMsgType) << std::endl;
-	// std::cout << "Parsed string: " << tmtc::parse::ParseScrambler(nScrambler) << std::endl;
-	// std::cout << "Parsed string: " << tmtc::parse::ParseFEC(nFEC) << std::endl;
-	// std::cout << "Parsed string: " << tmtc::parse::ParseFrameFormat(nFrameFormat) << std::endl;
-
-
-	
-
-    /* tmtc::telecommand::EncapsulateTCACK(pnPacket, 1, 0, nInData);
-    std::cout << "TC ACK Encapsulated"  << std::endl;
-    tmtc::telecommand::DecapsulateTCACK(pnPacket, m_nAckCode, nOutData);
-	
-    std::cout << "Ack code: " << m_nAckCode << std::endl;
-	*/
-
-	
+	// std::cout << "Parsed string: " << utils::parse::ParseMsgType(nMsgType) << std::endl;
+	// std::cout << "Parsed string: " << utils::parse::ParseScrambler(nScrambler) << std::endl;
+	// std::cout << "Parsed string: " << utils::parse::ParseFEC(nFEC) << std::endl;
+	// std::cout << "Parsed string: " << utils::parse::ParseFrameFormat(nFrameFormat) << std::endl;	
 
 	return 0;
 }

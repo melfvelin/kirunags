@@ -1,7 +1,7 @@
-#include "ServFuncs.h"
+#include "ServerFuncs.h"
 
 
-namespace ServFuncs
+namespace ServerFuncs
 {
 	/* EncapsulateTM - Creates a TM frame according to tables.h by encapsulating input parameters and local variables
 	*	inputs: uint8_t pointers pnOut and pnData, uint32_t nScrambler, nFec, nFrameFormat, nCaduSize
@@ -281,14 +281,14 @@ namespace ServFuncs
 			case 0:
 			// TM frames are never decapsulated on the server side
 			//	std::cout << "TM Frame decode start" << std::endl;
-			//	ServFuncs::DecapsulateTM()
+			//	ServerFuncs::DecapsulateTM()
 				break;
 			
 			case 1:
 			// TC frame
 				std::cout << "TC Frame decode start" << std::endl;
 				m_pnData = (uint8_t *)malloc(sizeof(uint64_t));
-				ServFuncs::DecapsulateTC(pnBuffer, m_nMsglen, m_nMsgType, m_nCltuSize, m_pnData);
+				ServerFuncs::DecapsulateTC(pnBuffer, m_nMsglen, m_nMsgType, m_nCltuSize, m_pnData);
 				
 				// TC accept condition
 				if(m_nCltuSize > 0)
@@ -296,7 +296,7 @@ namespace ServFuncs
 					// Allocate memory for constructing TC ACK frame
 					m_pnPacket = (uint8_t *)malloc(sizeof(TCACK_HEADER) + m_nCltuSize + sizeof(uint32_t));
 					// TC accepted, encapsulate TC ACK frame  
-					ServFuncs::EncapsulateTCACK(m_pnPacket, m_nCltuSize, 2, m_pnData);
+					ServerFuncs::EncapsulateTCACK(m_pnPacket, m_nCltuSize, 2, m_pnData);
 
 					// sending TC ack through socket where TC was received
 					if(send(nSockDesc, m_pnPacket, (sizeof(TCACK_HEADER) + m_nCltuSize + sizeof(uint32_t)), 0) < 0)
@@ -344,17 +344,17 @@ namespace ServFuncs
 			case 10:
 			// Session frame
 				std::cout << "Session Frame decode start" << std::endl;
-				ServFuncs::DecapsulateSession(pnBuffer, m_nMsglen, m_nMsgType, m_nTabType);
+				ServerFuncs::DecapsulateSession(pnBuffer, m_nMsglen, m_nMsgType, m_nTabType);
 				if(m_nTabType == 1)
 	    		{
-	    			SetConfTable(pnBuffer, m_nMsglen, m_nTabType);	
+	    			ServerFuncs::SetConfTable(pnBuffer, m_nMsglen, m_nTabType);	
 	    		}	
 				break;
 
 			case 11:
 			// Status frame
 				std::cout << "Status Frame decode start" << std::endl;
-				ServFuncs::DecapsulateStatus(pnBuffer, m_nMsglen, m_nMsgType, m_nTabType);
+				ServerFuncs::DecapsulateStatus(pnBuffer, m_nMsglen, m_nMsgType, m_nTabType);
 	    		
 	    		//  currently only 2 config tables implemented
 	    		switch(m_nTabType)
@@ -398,4 +398,4 @@ namespace ServFuncs
 		return;
 	}
 
-} 	/* ServFuncs */
+} 	/* ServerFuncs */

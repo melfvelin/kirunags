@@ -51,7 +51,7 @@ namespace ClientFuncs
 		TR_HEADER m_sTRheader;
 		m_sTRheader.nPreamble = PREAMBLE;
 		m_sTRheader.nMsglen = sizeof(TR_HEADER) + nPayloadSize + sizeof(uint32_t);
-		m_sTRheader.nTimeTag = tmtc::GenIRIGBTag();
+		m_sTRheader.nTimeTag = utils::GenIRIGBTag();
 		m_sTRheader.nMsgType = 3;
 		uint32_t m_nPostamble = POSTAMBLE;
 
@@ -69,7 +69,7 @@ namespace ClientFuncs
 		m_sANTheader.nMsglen = sizeof(ANT_HEADER) + sizeof(uint32_t);
 		// debug
 		std::cout << "Message lenght: " << m_sANTheader.nMsglen << std::endl;
-		m_sANTheader.nTimeTag = tmtc::GenIRIGBTag();
+		m_sANTheader.nTimeTag = utils::GenIRIGBTag();
 		m_sANTheader.nMsgType = 4;
 		m_sANTheader.fSatID = fSatID;
 		m_sANTheader.fAzimuth = fAzimuth;
@@ -88,7 +88,7 @@ namespace ClientFuncs
 		DOPP_HEADER m_sDOPPheader;
 		m_sDOPPheader.nPreamble = PREAMBLE;
 		m_sDOPPheader.nMsglen = sizeof(m_sDOPPheader) + sizeof(uint32_t);		
-		m_sDOPPheader.nTimeTag = tmtc::GenIRIGBTag();
+		m_sDOPPheader.nTimeTag = utils::GenIRIGBTag();
 		m_sDOPPheader.nMsgType = 5;
 		m_sDOPPheader.fSatID = fSatID;
 		m_sDOPPheader.fRxFreq = fRxFreq;

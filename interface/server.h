@@ -14,8 +14,7 @@
 #include <arpa/inet.h>
 #include <poll.h>
 #include "tables.h"
-#include "SetConf.h"
-#include "ServFuncs.h"
+#include "ServerFuncs.h"
 
 #define TM_PORT 2001
 #define TC_PORT 2002
@@ -24,9 +23,8 @@
 
 namespace server
 {
-	int setup(void);
-	int SetupMulti(void);
-	void SetupTest();
+	void FindSyncMarker(const uint8_t *in, uint32_t nDataLen);
+	void SetupServer(void);
 }
 
 // global variable declaration 

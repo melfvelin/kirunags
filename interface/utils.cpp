@@ -13,7 +13,7 @@
 #include <string>
 
 
-namespace tmtc
+namespace utils
 {
 	/*	GenIRIGTag() -   generates unsigned 64-bit IRIG-B time tag
 	*	inputs: none
@@ -233,7 +233,7 @@ namespace tmtc
 		}
 
 	}	/* parse */
-}	/* tmtc */
+}	/* utils */
 
 
 
