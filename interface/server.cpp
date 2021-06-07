@@ -20,37 +20,127 @@ namespace server{
 		uint32_t dwWord = 0;
 		uint8_t dataByte;
 
+		// int test1 = 255;
+		// int test2 = 3;
+		// int test3 = 0;
+		uint8_t test1 = 255;
+		uint8_t test2 = 255;
+		uint8_t test3 = 0;
+
+
 		// processor architecture is big endian?
 		// 0xa1b2c3d4 is stored as d4c3b2a1
-		nPreamble = (nPreamble << 8);
+		// nPreamble = (nPreamble << 8);
+		// shifts in 8 zeroes as LSB
 		std::cout << "Preamble is: " << std::hex << nPreamble << std::endl;
-		
 
+		
+		test3 = test1^test2;
+		// std::cout << "XOR test: " << test3 << std::endl;
+		test3 = _mm_popcnt_u32(test1^test2);
+		if(test3 == 0)
+		{
+			std::cout << "popcount = 0 match!" << test3 << std::endl;	
+		}
+		else if(test3 > 0)
+		{
+			std::cout << "popcount > 0 mismatch!" << test3 << std::endl;		
+		}
+
+		test2 = 0x3C;
+		test3 = (nPreamble & 0xFF000000);
+		test1 = _mm_popcnt_u32(test3^test2);
+		if(test3 == 0)
+		{
+			std::cout << "popcount = 0 match!" << test3 << std::endl;	
+		}
+		else if(test3 > 0)
+		{
+			std::cout << "popcount > 0 mismatch!" << test3 << std::endl;		
+		}
+
+
+		// testing OR
+		//		m_nNewByte = testptr[0];
+		test1 = 255;
+		dwWord = (dwWord << 8) | test1;
+		std::cout << "dwWord: " << dwWord << std::endl;
+		// OR works
 		uint8_t *testptr = (uint8_t *)malloc(sizeof(uint32_t));
 		memcpy(testptr, &nPreamble, sizeof(uint32_t));
 		m_nNewByte = testptr[0];
 		std::cout << "testptr is: " << std::hex << *testptr << std::endl;
 		std::cout << "NewByte is: " << std::hex << m_nNewByte << std::endl;
-
-		for(int i = 0; i < sizeof(uint32_t); i++)
+		dwWord = 0;
+		test3 = 0xA1;
+		
+		/*
+		for(int i = 3; i >= 0; i--)
 		{
 				// new byte comes in here
 				// bit shifting happens here
-				m_nNewByte = (testptr[i] & 0xFF); // 0xFF to extract one byte at a time
-				// shifting in 8 zeros and then putting the new byte there
-				dwWord = (dwWord >> 8) | m_nNewByte;
-				dataByte = (dataByte >> 8) | m_nNewByte;
-				ones = _mm_popcnt_u32(nPreamble^dwWord);		// do-while could be used here?
+				m_nNewByte = testptr[i];
+				if(m_nNewByte == test3)
+				{
+					std::cout << "A1 found at i: " << i << std::endl;
+				}
+				dwWord = (dwWord << 8) | m_nNewByte;
+				// shifting in 8 zeros as LSB and then putting the new byte there
+				
+				//dataByte = (dataByte << 8) | m_nNewByte;
+				// ones = _mm_popcnt_u32(0xA1^dwWord);		// do-while could be used here?
 				// ones = _mm_popcnt_epi32(nPreamble^dwWord);
 				// all 0s is match, any ones is mismatch
-				if(ones == 0)
-				{
-					std::cout << "popcount is zero" << std::endl;
-				}
+				// if(ones == 0)
+				// {
+				//	std::cout << "popcount is zero (match) in the loop" << std::endl;
+				//}
 				std::cout << "i is: " << i << std::endl;
-				std::cout << "m_nNewByte is: " << std::hex << m_nNewByte << std::endl;
 				// STATE SEARCH
 		}
+		*/
+		// above works with backwards byte
+		uint32_t newbyte = 0;
+		for(int i = 0; i < 4; i++)
+		{
+				// new byte comes in here
+				// bit shifting happens here
+				m_nNewByte = testptr[i];
+				newbyte = m_nNewByte;
+				if(m_nNewByte == test3)
+				{
+					std::cout << "A1 found at i: " << i << std::endl;
+				}
+				dwWord = (dwWord >> 8) | newbyte;
+				// shifting in 8 zeros as LSB and then putting the new byte there
+				
+				//dataByte = (dataByte << 8) | m_nNewByte;
+				// ones = _mm_popcnt_u32(0xA1^dwWord);		// do-while could be used here?
+				// ones = _mm_popcnt_epi32(nPreamble^dwWord);
+				// all 0s is match, any ones is mismatch
+				// if(ones == 0)
+				// {
+				//	std::cout << "popcount is zero (match) in the loop" << std::endl;
+				//}
+				std::cout << "i is: " << i << std::endl;
+				// STATE SEARCH
+		}
+
+		std::cout << "dWWord is: " << std::hex << dwWord << std::endl;
+		if(!_mm_popcnt_u32(dwWord^nPreamble))
+		{
+			std::cout << "popcount = 0 match ffs!" << test3 << std::endl;	
+		}
+
+		uint32_t pOut = 0;
+		uint32_t input = 255;
+
+		for(int i = 1; i < 33; i++)
+		{
+			pOut = input & 0x01;
+			input = (input >> 1);
+			std::cout << "bit " << std::dec << i << " = " << pOut << std::endl;
+		}	// prints from the right but doesnt work the other way
 		
 		/*
 		for(int i = 0; i < nDataLen; i++)

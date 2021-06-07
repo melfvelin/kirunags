@@ -49,6 +49,8 @@ int main()
     sUlTable.nPlopVersion = 1;
     sUlTable.nPostamble = POSTAMBLE;
 
+    std::cout << "Uplink and downlink tables set" << std::endl;
+    
     uint8_t *syncPointer = (uint8_t *)malloc(sizeof(UL_TABLE));
     memcpy(syncPointer, &sUlTable, sizeof(UL_TABLE));
     server::FindSyncMarker(syncPointer, sizeof(UL_TABLE));
@@ -57,10 +59,10 @@ int main()
     {
 		std::cout << "Pointer is free" << std::endl;    	
     }
+    
+    
 
-    std::cout << "Uplink and downlink tables set" << std::endl;
-
-	// server::SetupServer();
+    // server::SetupServer();
 
 	// std::cout << "Parsed string: " << utils::parse::ParseMsgType(nMsgType) << std::endl;
 	// std::cout << "Parsed string: " << utils::parse::ParseScrambler(nScrambler) << std::endl;
