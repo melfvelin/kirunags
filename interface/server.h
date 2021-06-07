@@ -14,6 +14,8 @@
 #include <cstring>
 #include <arpa/inet.h>
 #include <sys/time.h>
+#include <nmmintrin.h>
+#include <immintrin.h>
 
 #include "tables.h"
 #include "ServerFuncs.h"

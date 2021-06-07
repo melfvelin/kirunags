@@ -14,26 +14,64 @@ namespace server{
 	void FindSyncMarker(const uint8_t *in, uint32_t nDataLen)
 	{
 		uint8_t m_SyncState;
-		uint8_t nNewBit;
+		uint8_t m_nNewByte;
 		uint8_t ones = 0;
 		uint32_t nPreamble = 0xA1B2C3D4;
 		uint32_t dwWord = 0;
 		uint8_t dataByte;
 
-		// nested for loop might be the best solution for TCP interface
-		// wip wip wip
+		// processor architecture is big endian?
+		// 0xa1b2c3d4 is stored as d4c3b2a1
+		nPreamble = (nPreamble << 8);
+		std::cout << "Preamble is: " << std::hex << nPreamble << std::endl;
+		
+
+		uint8_t *testptr = (uint8_t *)malloc(sizeof(uint32_t));
+		memcpy(testptr, &nPreamble, sizeof(uint32_t));
+		m_nNewByte = testptr[0];
+		std::cout << "testptr is: " << std::hex << *testptr << std::endl;
+		std::cout << "NewByte is: " << std::hex << m_nNewByte << std::endl;
+
+		for(int i = 0; i < sizeof(uint32_t); i++)
+		{
+				// new byte comes in here
+				// bit shifting happens here
+				m_nNewByte = (testptr[i] & 0xFF); // 0xFF to extract one byte at a time
+				// shifting in 8 zeros and then putting the new byte there
+				dwWord = (dwWord >> 8) | m_nNewByte;
+				dataByte = (dataByte >> 8) | m_nNewByte;
+				ones = _mm_popcnt_u32(nPreamble^dwWord);		// do-while could be used here?
+				// ones = _mm_popcnt_epi32(nPreamble^dwWord);
+				// all 0s is match, any ones is mismatch
+				if(ones == 0)
+				{
+					std::cout << "popcount is zero" << std::endl;
+				}
+				std::cout << "i is: " << i << std::endl;
+				std::cout << "m_nNewByte is: " << std::hex << m_nNewByte << std::endl;
+				// STATE SEARCH
+		}
+		
+		/*
 		for(int i = 0; i < nDataLen; i++)
 		{
-			// new byte comes in here
-
-			for(int j = 0; j < 8; j++)
-			{
+				// new byte comes in here
 				// bit shifting happens here
-				nNewBit = (in[i] & 0x01); // 0xFF to extract one byte at a time
-				// dwWord << 8 instead
-				// STATE DECODE
-			}
-		}
+				m_nNewByte = (in[i] & 0xFF); // 0xFF to extract one byte at a time
+				// shifting in 8 zeros and then putting the new byte there
+				dwWord = (dwWord << 8) | m_nNewByte;
+				dataByte = (dataByte << 8) | m_nNewByte;
+				ones = _mm_popcnt_u32(nPreamble^dwWord);		// do-while could be used here?
+				// ones = _mm_popcnt_epi32(nPreamble^dwWord);
+				// all 0s is match, any ones is mismatch
+				if(ones == 0)
+				{
+					std::cout << "popcount is zero" << std::endl;
+				}
+				std::cout << "i is: " << i << std::endl;
+				std::cout << "m_nNewByte is: " << std::hex << m_nNewByte << std::endl;
+				// STATE SEARCH
+		} */
 
 		/*
 		for(int i = 0; i < nDataLen * sizeof(uint8_t); i++)
@@ -44,7 +82,7 @@ namespace server{
 			// ones = _mm_popcnt_u32(nPreamble^dwWord);
 
 
-			// byte implementation doesnt work unless one everything is byte-wise, what happens if packet is preceded by three bits of trash?
+			// byte implementation doesnt work unless one everything is byte-wise, what happens if packet is preceded by three bits of trash? It isnt, take one byte at the time
 			byte = (in[i] & 0xFF);
 			dwWord = (dwWord << 8) | byte;
 			dataByte = (dataByte << 8) | byte;
