@@ -1,19 +1,6 @@
 // This is the TCP/IP server
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <string>
-#include <cstring>
-#include <arpa/inet.h>
-#include <sys/time.h>
 
 #include "server.h"
-#include "tmtc.h"
-#include "tables.h"
-#include "SetConf.h"
-
 
 /*	uncomment for debug output
 #ifndef debug

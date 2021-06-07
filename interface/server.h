@@ -1,5 +1,6 @@
 /*  server.h
 *   includes for server.cpp
+* author: Martin Elfvelin
 */
 #ifndef SERVER_H
 #define SERVER_H
@@ -12,7 +13,8 @@
 #include <string>
 #include <cstring>
 #include <arpa/inet.h>
-#include <poll.h>
+#include <sys/time.h>
+
 #include "tables.h"
 #include "ServerFuncs.h"
 

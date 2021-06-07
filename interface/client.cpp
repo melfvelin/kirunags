@@ -4,8 +4,6 @@
 *
 */
 #include "client.h"
-#include "tmtc.h"
-#include "tables.h"
 
 #ifndef debug
 #define debug
