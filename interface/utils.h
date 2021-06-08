@@ -20,6 +20,7 @@ namespace utils
   		int DecimalToBCD(int decimal);
   		int BCDToDecimal(int bcd); 
       int GetMsgType(uint8_t *pnData);      
+      void PrintBinary(uint32_t nIn, int bigendian);
       
       namespace parse
       {

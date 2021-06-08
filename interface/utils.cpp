@@ -90,6 +90,34 @@ namespace utils
 		return -1;
 	}
 
+	void PrintBinary(uint32_t nIn, int bigendian)
+	{
+		uint32_t m_nOut;
+
+		if(bigendian == 0)
+		{
+			for(int i = 1; i < 33; i++)
+			{
+				m_nOut = nIn & 0x01;
+				std::cout << "bit " << std::dec << i << " = " << m_nOut << std::endl;
+				nIn = (nIn >> 1);
+			}	// prints from the right but doesnt work the other way	
+		}
+		else if(bigendian == 1)
+		{
+			for(int i = 1; i < 33; i++)
+			{
+				m_nOut = nIn & 0x80000000;
+				m_nOut = m_nOut >> 31;
+				std::cout << "bit" << std::dec << i << " = " << m_nOut << std::endl;
+				nIn = (nIn << 1);
+			}	// prints from the right but doesnt work the other way	
+		}
+		return;
+	}
+
+
+
 	namespace parse
 	{
 		
