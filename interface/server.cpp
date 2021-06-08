@@ -11,7 +11,7 @@
 namespace server{
 	
 	// WIP WIP WIP WIP
-	void FindSyncMarker(const uint8_t *in, uint32_t nDataLen)
+	void FindAsmOne(const uint8_t *in)
 	{
 		uint8_t m_SyncState;
 		uint8_t m_nNewByte;
@@ -19,41 +19,91 @@ namespace server{
 		uint32_t nPreamble = 0xA1B2C3D4;
 		uint32_t dwWord = 0;
 		uint8_t dataByte;
-
+		uint32_t testdw;
+		uint8_t m_nSyncState = 0;
+		uint32_t m_nMsglen;
+		uint32_t m_nMsgType;
+		uint8_t m_testVec[1000];	// use this to verify data contents?
+		int m_nDecodedBytes = 0;
+		std::vector<uint8_t> datavec;
 
 		// processor architecture is big endian?
 		// 0xa1b2c3d4 is stored as d4c3b2a1
 
-		std::cout << "Preamble is: " << std::hex << nPreamble << std::endl;
+		// quick test on msglen
 
+		memcpy(&m_nMsglen, (in + sizeof(uint32_t)), sizeof(uint32_t));
+		std::cout << "Msglen= " << m_nMsglen << std::endl;
+		
+		uint32_t nDataLen = 1000;
 
-		utils::PrintBinary(nPreamble, 0);
-		uint8_t *testptr = (uint8_t *)malloc(sizeof(uint32_t));
-		memcpy(testptr, &nPreamble, sizeof(uint32_t));
-		uint32_t testdw;
-		uint32_t newbyte = 0;
-		for(int i = 0; i < 4; i++)
+		for(int i = 0; i < nDataLen; i++)
 		{
-				// new byte comes in here
-				// bit shifting happens here
-				m_nNewByte = testptr[i];
-				dwWord = (dwWord << 8) | m_nNewByte;		// works but get backwards
-				testdw = __builtin_bswap32(dwWord);
-				// dataByte = (dataByte << 8) | m_nNewByte; payload relevant
 				
-				// do-while could be used here?
-				if((_mm_popcnt_u32(nPreamble^dwWord)) == 0)
+				switch(m_nSyncState)
 				{
-					std::cout << "popcount is zero (match) in the loop" << std::endl;
-				}
-				else if((_mm_popcnt_u32(nPreamble^testdw)) == 0)
-				{
-					std::cout << "popcount is zero (match) after bswap in the loop" << std::endl;	
-				}
+					case 0:		// STATE SEARCH
+						// new byte comes in here
+						m_nNewByte = in[i];
+						dwWord = (dwWord << 8) | m_nNewByte;		// works but get backwards
+						dataByte = (dataByte << 8) | m_nNewByte;
+						
+						// swap byte order to check for inverted bit sequence
+						testdw = __builtin_bswap32(dwWord);
+						
+						// do-while could be used here?
+						if((_mm_popcnt_u32(nPreamble^dwWord)) == 0)
+						{
+							std::cout << "popcount is zero (match) in the loop" << std::endl;
+							m_nSyncState = 1;
+						}
+						else if((_mm_popcnt_u32(nPreamble^testdw)) == 0)
+						{
+							std::cout << "popcount is zero (match) after bswap in the loop" << std::endl;
+							m_nSyncState = 1;
+						}
+						std::cout << "Switch state 0, i = " << i << std::endl;
+						break;	
 
-				// STATE SEARCH
+					case 1:		// STATE DECODE LENGTH FIELD
+						// store data somehow
+						m_nNewByte = in[i];
+						dataByte = (dataByte << 8) | m_nNewByte;
+						datavec.push_back(dataByte);
+						++m_nDecodedBytes;
+
+						// message length decoder
+						if(m_nDecodedBytes <= 4)
+						{
+							m_nMsglen = (m_nMsglen << 8) | dataByte;
+
+							if(m_nDecodedBytes == 4)
+							{
+								m_nMsglen = __builtin_bswap32(m_nMsglen);
+								std::cout << "bswapped m_nMsglen = " << m_nMsglen << std::endl;
+								nDataLen = m_nMsglen;
+								m_nSyncState = 2;
+							}	
+						}
+						std::cout << "Switch state 1, i = " << i << std::endl;
+						break;
+
+					case 2:		// STATE DECODE REMAINING FRAME
+						m_nNewByte = in[i];
+						dataByte = (dataByte << 8) | m_nNewByte;
+						datavec.push_back(dataByte);
+						std::cout << "Switch state 2, i = " << i << std::endl;
+						++m_nDecodedBytes;
+						break;
+				}
 		}
-	
+		std::cout << "Decoded bytes:" << m_nDecodedBytes << std::endl;
+
+		GEN_HEADER m_sGenHeader;
+		memcpy(&m_sGenHeader.nMsglen, &datavec, (3*sizeof(uint32_t)));
+		std::cout << "Msg len: " << m_sGenHeader.nMsglen << std::endl;
+		std::cout << "Msg type: " << m_sGenHeader.nMsgType << std::endl;
+		std::cout << "Tab type: " << m_sGenHeader.nTabType << std::endl;
 		
 		/*
 		if(!_mm_popcnt_u32(dwWord^nPreamble))

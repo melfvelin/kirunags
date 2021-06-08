@@ -50,10 +50,11 @@ int main()
     sUlTable.nPostamble = POSTAMBLE;
 
     std::cout << "Uplink and downlink tables set" << std::endl;
-    
-    uint8_t *syncPointer = (uint8_t *)malloc(sizeof(UL_TABLE));
-    memcpy(syncPointer, &sUlTable, sizeof(UL_TABLE));
-    server::FindSyncMarker(syncPointer, sizeof(UL_TABLE));
+    std::cout << "sizeof(UL_TABLE) = " << sizeof(DL_TABLE) << std::endl;
+
+    uint8_t *syncPointer = (uint8_t *)malloc(sizeof(DL_TABLE));
+    memcpy(syncPointer, &sDlTable, sizeof(DL_TABLE));
+    server::FindAsmOne(syncPointer);
     free(syncPointer);
     if(syncPointer == nullptr)
     {

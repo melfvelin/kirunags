@@ -16,6 +16,7 @@
 #include <sys/time.h>
 #include <nmmintrin.h>
 #include <immintrin.h>
+#include <vector>
 
 #include "tables.h"
 #include "ServerFuncs.h"
@@ -27,7 +28,7 @@
 
 namespace server
 {
-	void FindSyncMarker(const uint8_t *in, uint32_t nDataLen);
+	void FindAsmOne(const uint8_t *in);
 	void SetupServer(void);
 }
 
