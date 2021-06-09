@@ -392,7 +392,7 @@ namespace server{
 	                perror("accept");  
 	                exit(EXIT_FAILURE);  
 	            }  
-	             
+	            
 	            //inform user of socket number - used in send and receive commands 
 	           	std::cout << "New connection, socket fd: " << m_nNewSock << " ip: " << inet_ntoa(m_sAddress.sin_addr) << " port: " << ntohs(m_sAddress.sin_port)
 	           	<< std::endl;
