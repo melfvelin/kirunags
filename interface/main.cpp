@@ -54,16 +54,28 @@ int main()
 
     uint8_t *syncPointer = (uint8_t *)malloc(sizeof(DL_TABLE));
     memcpy(syncPointer, &sDlTable, sizeof(DL_TABLE));
-    server::FindAsmOne(syncPointer);
+    // server::FindAsmOne(syncPointer);
     free(syncPointer);
     if(syncPointer == nullptr)
     {
 		std::cout << "Pointer is free" << std::endl;    	
     }
     
-    
-
-    // server::SetupServer();
+    TEST_HEADER m_sTestHeader;
+    m_sTestHeader.nTrash = 0xD5A1134E;
+    m_sTestHeader.nPreamble = PREAMBLE;
+    m_sTestHeader.nMsglen = 5 * sizeof(uint32_t);
+    m_sTestHeader.nMsgType = 12;
+    m_sTestHeader.nTabType = 0;
+    m_sTestHeader.nPostamble = POSTAMBLE;
+    std::cout << "TEST_HEADER Msglen = " << m_sTestHeader.nMsglen << std::endl;
+    std::cout << "TEST_HEADER MsgType = " << m_sTestHeader.nMsgType << std::endl;
+    syncPointer = (uint8_t *)malloc(sizeof(TEST_HEADER));
+    memcpy(syncPointer, &m_sTestHeader, sizeof(TEST_HEADER));
+    // server::FindAsmOne(syncPointer);
+    // server::FindAsmTwo(syncPointer, 20);
+    // server::FindAsmThree(syncPointer);
+    server::SetupServer();
 
 	// std::cout << "Parsed string: " << utils::parse::ParseMsgType(nMsgType) << std::endl;
 	// std::cout << "Parsed string: " << utils::parse::ParseScrambler(nScrambler) << std::endl;

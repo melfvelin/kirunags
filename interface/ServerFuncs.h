@@ -14,6 +14,7 @@
 #include <sys/socket.h>
 #include "tables.h"
 #include "utils.h"
+#include "server.h"
 
 namespace ServerFuncs
 {

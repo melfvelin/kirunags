@@ -137,5 +137,21 @@ typedef struct __attribute__ ((packed)) _UL_TABLE {
     uint32_t nPostamble;        /* Postamble */
 } UL_TABLE;
 
+typedef struct __attribute__ ((packed)) _TEST_HEADER {
+    uint64_t nTrash;            /* Trash for sync test */
+    uint32_t nPreamble;         /* Packet preamble */
+    uint32_t nMsglen;           /* Total packet length */
+    uint32_t nMsgType;          /* Message type */
+    uint32_t nTabType;          /* Table type */
+    uint32_t nPostamble;        /* Packet postamble */
+} TEST_HEADER;
+
+typedef enum __SYNC_STATE
+    {
+        SYNC_SEARCH = 0,
+        SYNC_LENGTH,
+        SYNC_DECODE
+    } SYNC_STATE;
+
 
 #endif /* TABLES_H */

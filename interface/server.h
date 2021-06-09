@@ -28,7 +28,9 @@
 
 namespace server
 {
-	void FindAsmOne(const uint8_t *in);
+	void FindAsmOne(const uint8_t *in, uint32_t& nMsgType);
+	void FindAsmTwo(const uint8_t *in, const uint32_t nFrameLen, uint32_t& nMsgType);
+	void FindAsmThree(const uint8_t *in, uint32_t& nMsgType);
 	void SetupServer(void);
 }
 

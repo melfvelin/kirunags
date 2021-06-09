@@ -251,6 +251,7 @@ namespace ServerFuncs
 	int MsgHandler(int nSockDesc, uint8_t *pnBuffer, uint32_t& nValread)
 	{
 		static uint32_t m_nMsglen;
+		static uint32_t m_nMsgType;
 		static uint64_t m_nTimeTag;
 		static uint32_t m_nCaduSize;
 		static uint32_t m_nCltuSize;
@@ -268,7 +269,8 @@ namespace ServerFuncs
 		static float rxdopp = 0;
 		static float txfreq = 0;
 		static float txdopp = 0;
-		uint32_t m_nMsgType = utils::GetMsgType(pnBuffer);
+		// uint32_t m_nMsgType = utils::GetMsgType(pnBuffer);
+		server::FindAsmThree(pnBuffer, m_nMsgType);		// will write message type from buffer to m_nMsgType
 
 		if(m_nMsgType < 0)
 		{

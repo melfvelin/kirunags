@@ -11,169 +11,272 @@
 namespace server{
 	
 	// WIP WIP WIP WIP
-	void FindAsmOne(const uint8_t *in)
+	void FindAsmOne(const uint8_t *in, uint32_t& nMsgType)
 	{
-		uint8_t m_SyncState;
 		uint8_t m_nNewByte;
-		uint8_t ones = 0;
-		uint32_t nPreamble = 0xA1B2C3D4;
-		uint32_t dwWord = 0;
-		uint8_t dataByte;
-		uint32_t testdw;
-		uint8_t m_nSyncState = 0;
+		uint8_t m_nOnes = 0;
+		uint32_t m_nPreamble = 0xA1B2C3D4;
+		uint32_t m_nWord = 0;
+		uint8_t m_nDataByte;
+		uint32_t m_nInvWord;	
 		uint32_t m_nMsglen;
 		uint32_t m_nMsgType;
-		uint8_t m_testVec[1000];	// use this to verify data contents?
+		uint8_t m_testVec[1000];	// use this to verify data contents
 		int m_nDecodedBytes = 0;
+		int m_nIndex = 0;
 		std::vector<uint8_t> datavec;
-
-		// processor architecture is big endian?
-		// 0xa1b2c3d4 is stored as d4c3b2a1
-
-		// quick test on msglen
-
-		memcpy(&m_nMsglen, (in + sizeof(uint32_t)), sizeof(uint32_t));
-		std::cout << "Msglen= " << m_nMsglen << std::endl;
+		SYNC_STATE m_SyncState = SYNC_SEARCH;
+		uint32_t nDataLen = 1000;	// Max data lengt, will be changed when nFramelen is decoded
 		
-		uint32_t nDataLen = 1000;
 
 		for(int i = 0; i < nDataLen; i++)
 		{
 				
-				switch(m_nSyncState)
+				switch(m_SyncState)		// use enum instead of numbers here
 				{
-					case 0:		// STATE SEARCH
+					case SYNC_SEARCH:		// STATE SEARCH
 						// new byte comes in here
 						m_nNewByte = in[i];
-						dwWord = (dwWord << 8) | m_nNewByte;		// works but get backwards
-						dataByte = (dataByte << 8) | m_nNewByte;
-						
+						m_nWord = (m_nWord << 8) | m_nNewByte;		// works but get backwards
+						m_nDataByte = (m_nDataByte << 8) | m_nNewByte;
+
 						// swap byte order to check for inverted bit sequence
-						testdw = __builtin_bswap32(dwWord);
+						m_nInvWord = __builtin_bswap32(m_nWord);
 						
 						// do-while could be used here?
-						if((_mm_popcnt_u32(nPreamble^dwWord)) == 0)
+						if((_mm_popcnt_u32(m_nPreamble^m_nWord)) == 0)
 						{
-							std::cout << "popcount is zero (match) in the loop" << std::endl;
-							m_nSyncState = 1;
+							std::cout << "SYNC -> DECODE" << std::endl;
+						m_SyncState = SYNC_LENGTH;
 						}
-						else if((_mm_popcnt_u32(nPreamble^testdw)) == 0)
+						else if((_mm_popcnt_u32(m_nPreamble^m_nInvWord)) == 0)
 						{
-							std::cout << "popcount is zero (match) after bswap in the loop" << std::endl;
-							m_nSyncState = 1;
+							std::cout << "SYNC -> DECODE" << std::endl;
+							m_SyncState = SYNC_LENGTH;
 						}
-						std::cout << "Switch state 0, i = " << i << std::endl;
+						// std::cout << "Switch state 0, i = " << i << std::endl;
 						break;	
 
-					case 1:		// STATE DECODE LENGTH FIELD
+					case SYNC_LENGTH:		// STATE DECODE LENGTH FIELD
 						// store data somehow
 						m_nNewByte = in[i];
-						dataByte = (dataByte << 8) | m_nNewByte;
-						datavec.push_back(dataByte);
+						m_nDataByte = (m_nDataByte << 8) | m_nNewByte;
+						datavec.push_back(m_nDataByte);
 						++m_nDecodedBytes;
 
 						// message length decoder
 						if(m_nDecodedBytes <= 4)
 						{
-							m_nMsglen = (m_nMsglen << 8) | dataByte;
+							m_nMsglen = (m_nMsglen << 8) | m_nDataByte;
 
 							if(m_nDecodedBytes == 4)
 							{
 								m_nMsglen = __builtin_bswap32(m_nMsglen);
-								std::cout << "bswapped m_nMsglen = " << m_nMsglen << std::endl;
-								nDataLen = m_nMsglen;
-								m_nSyncState = 2;
+								// nDataLen is changed (affects for-loop)
+								nDataLen = i + m_nMsglen - 7;	// (-7 because we loop 8 times while reading preamble and msglen)
+								m_SyncState = SYNC_DECODE;
 							}	
 						}
-						std::cout << "Switch state 1, i = " << i << std::endl;
+						// std::cout << "Switch state 1, i = " << i << std::endl;
 						break;
 
-					case 2:		// STATE DECODE REMAINING FRAME
+					case SYNC_DECODE:		// STATE DECODE REMAINING FRAME
 						m_nNewByte = in[i];
-						dataByte = (dataByte << 8) | m_nNewByte;
-						datavec.push_back(dataByte);
-						std::cout << "Switch state 2, i = " << i << std::endl;
+						m_nDataByte = (m_nDataByte << 8) | m_nNewByte;
+						datavec.push_back(m_nDataByte);
+						m_testVec[m_nIndex] = in[i];
+						// std::cout << "Switch state 2, i = " << i << std::endl;
 						++m_nDecodedBytes;
+						++m_nIndex;
+						if(m_nDecodedBytes == (m_nMsglen - 4))		// replace with a do-while?
+						{
+							m_SyncState = SYNC_SEARCH;
+							std::cout << "Sync state set to 0 " << std::endl;
+						}
 						break;
 				}
 		}
 		std::cout << "Decoded bytes:" << m_nDecodedBytes << std::endl;
 
+		// TROUBLESHOOTING BELOW
+		
 		GEN_HEADER m_sGenHeader;
-		memcpy(&m_sGenHeader.nMsglen, &datavec, (3*sizeof(uint32_t)));
-		std::cout << "Msg len: " << m_sGenHeader.nMsglen << std::endl;
+		memcpy(&m_sGenHeader.nMsgType, m_testVec, (2 * sizeof(uint32_t)));
 		std::cout << "Msg type: " << m_sGenHeader.nMsgType << std::endl;
 		std::cout << "Tab type: " << m_sGenHeader.nTabType << std::endl;
-		
-		/*
-		if(!_mm_popcnt_u32(dwWord^nPreamble))
-		{
-			std::cout << "popcount = 0 match ffs!" << test3 << std::endl;	
-		}
+		// writing message type to parent function
+		nMsgType = m_sGenHeader.nMsgType;	
+		return;
+	}
 
-		uint32_t pOut = 0;
-		uint32_t input = 255;
-		input = 0x80010101;
-		// utils::PrintBinary(input, 0);
-	*/
+	void FindAsmTwo(const uint8_t *in, const uint32_t nFrameLen, uint32_t& nMsgType)
+	{
+		uint8_t m_nNewByte;
+		uint8_t m_nOnes = 0;
+		uint32_t m_nPreamble = 0xA1B2C3D4;
+		uint32_t m_nWord = 0;
+		uint8_t m_nDataByte;
+		uint32_t m_nInvWord;	
+		uint32_t m_nMsglen;
+		uint32_t m_nMsgType;
+		uint8_t m_testVec[1000];	// use this to verify data contents
+		int m_nDecodedBytes = 0;
+		int m_nIndex = 0;
+		std::vector<uint8_t> datavec;
+		SYNC_STATE m_SyncState = SYNC_SEARCH;
+		uint32_t nDataLen = 1000;	// Max data lengt, will be changed when preamble is found
 		
+		std::cout << "############### ASM 2 SYNC FUNCTION ###############" << std::endl;
 
-		// utils::PrintBinary(input, 1);
-		
-		/*
 		for(int i = 0; i < nDataLen; i++)
 		{
-				// new byte comes in here
-				// bit shifting happens here
-				m_nNewByte = (in[i] & 0xFF); // 0xFF to extract one byte at a time
-				// shifting in 8 zeros and then putting the new byte there
-				dwWord = (dwWord << 8) | m_nNewByte;
-				dataByte = (dataByte << 8) | m_nNewByte;
-				ones = _mm_popcnt_u32(nPreamble^dwWord);		// do-while could be used here?
-				// ones = _mm_popcnt_epi32(nPreamble^dwWord);
-				// all 0s is match, any ones is mismatch
-				if(ones == 0)
+				
+				switch(m_SyncState)		// use enum instead of numbers here
 				{
-					std::cout << "popcount is zero" << std::endl;
+					case SYNC_SEARCH:		// STATE SEARCH
+						// new byte comes in here
+						m_nNewByte = in[i];
+						m_nWord = (m_nWord << 8) | m_nNewByte;		// works but get backwards
+						m_nDataByte = (m_nDataByte << 8) | m_nNewByte;
+
+						// swap byte order to check for inverted bit sequence
+						m_nInvWord = __builtin_bswap32(m_nWord);
+						
+						// do-while could be used here?
+						if((_mm_popcnt_u32(m_nPreamble^m_nWord)) == 0)
+						{
+							std::cout << "SYNC -> DECODE" << std::endl;
+							m_SyncState = SYNC_DECODE;
+							nDataLen = i + nFrameLen - 3;
+						}
+						else if((_mm_popcnt_u32(m_nPreamble^m_nInvWord)) == 0)
+						{
+							std::cout << "SYNC -> DECODE" << std::endl;
+							m_SyncState = SYNC_DECODE;
+							nDataLen = i + nFrameLen - 3;
+						}
+						// std::cout << "Switch state 0, i = " << i << std::endl;
+						break;	
+
+					case SYNC_DECODE:		// STATE DECODE REMAINING FRAME
+						m_nNewByte = in[i];
+						m_nDataByte = (m_nDataByte << 8) | m_nNewByte;
+						datavec.push_back(m_nDataByte);
+						m_testVec[m_nIndex] = in[i];
+						// std::cout << "Switch state 2, i = " << i << std::endl;
+						++m_nDecodedBytes;
+						++m_nIndex;
+						if(m_nDecodedBytes == (m_nMsglen - 4))		// replace with a do-while?
+						{
+							m_SyncState = SYNC_SEARCH;
+							std::cout << "Sync state set to 0 " << std::endl;
+						}
+						break;
 				}
-				std::cout << "i is: " << i << std::endl;
-				std::cout << "m_nNewByte is: " << std::hex << m_nNewByte << std::endl;
-				// STATE SEARCH
-		} */
-
-		/*
-		for(int i = 0; i < nDataLen * sizeof(uint8_t); i++)
-		{
-			bit = (in[i] & 0x01);
-			dwWord = (dwWord << 1) | bit;
-			dataByte = (dataByte << 1) | bit;
-			// ones = _mm_popcnt_u32(nPreamble^dwWord);
-
-
-			// byte implementation doesnt work unless one everything is byte-wise, what happens if packet is preceded by three bits of trash? It isnt, take one byte at the time
-			byte = (in[i] & 0xFF);
-			dwWord = (dwWord << 8) | byte;
-			dataByte = (dataByte << 8) | byte;
-
-			switch(m_SyncState)
-			{
-				case 0:		// SYNC STATE SEARCH
-					if(_mm_popcnt_u32(nPreamble^dwWord) == 0)
-					{
-						std::cout << "Start sequence found SEARCH -> DECODE" << std::endl;	
-					}
-					break;
-				case 1:		// SYNC STATE DECODE
-					std::cout << "State DECODE" << std::endl;
-					break;
-			}
-
 		}
-		*/
+		std::cout << "Decoded bytes:" << m_nDecodedBytes << std::endl;
+
+		// DATA VALIDATION BELOW
 		
+		GEN_HEADER m_sGenHeader;
+		memcpy(&m_sGenHeader.nMsgType, (m_testVec + 4), (2 * sizeof(uint32_t)));
+		std::cout << "Msg type: " << m_sGenHeader.nMsgType << std::endl;
+		std::cout << "Tab type: " << m_sGenHeader.nTabType << std::endl;
+		// writing message type to parent function
+		nMsgType = m_sGenHeader.nMsgType;	
 
 		return;
 	}
+
+	void FindAsmThree(const uint8_t *in, uint32_t& nMsgType)
+	{
+		uint8_t m_nNewByte;
+		uint8_t m_nOnes = 0;
+		uint32_t m_nPreamble = 0xA1B2C3D4;
+		uint32_t m_nPostamble = POSTAMBLE;
+		uint32_t m_nWord = 0;
+		uint8_t m_nDataByte;
+		uint32_t m_nInvWord;	
+		uint32_t m_nMsglen;
+		uint32_t m_nMsgType;
+		uint8_t m_testVec[1000];	// use this to verify data contents
+		int m_nDecodedBytes = 0;
+		int m_nIndex = 0;
+		std::vector<uint8_t> datavec;
+		SYNC_STATE m_SyncState = SYNC_SEARCH;
+		uint32_t nDataLen = 128;	// Max data lengt, will be changed when preamble is found
+		
+		std::cout << "############### ASM 3 SYNC FUNCTION ###############" << std::endl;
+
+		for(int i = 0; i < nDataLen; i++)
+		{
+				
+				switch(m_SyncState)		// use enum instead of numbers here
+				{
+					case SYNC_SEARCH:		// STATE SEARCH
+						// new byte comes in here
+						m_nNewByte = in[i];
+						m_nWord = (m_nWord << 8) | m_nNewByte;		// works but get backwards
+						m_nDataByte = (m_nDataByte << 8) | m_nNewByte;
+
+						// swap byte order to check for inverted bit sequence
+						m_nInvWord = __builtin_bswap32(m_nWord);
+						
+						// do-while could be used here?
+						if((_mm_popcnt_u32(m_nPreamble^m_nWord)) == 0)
+						{
+							std::cout << "SYNC -> DECODE" << std::endl;
+							m_SyncState = SYNC_DECODE;
+						}
+						else if((_mm_popcnt_u32(m_nPreamble^m_nInvWord)) == 0)
+						{
+							std::cout << "SYNC -> DECODE" << std::endl;
+							m_SyncState = SYNC_DECODE;
+						}
+						// std::cout << "Switch state 0, i = " << i << std::endl;
+						break;	
+
+					case SYNC_DECODE:		// STATE DECODE REMAINING FRAME
+						m_nNewByte = in[i];
+						m_nDataByte = (m_nDataByte << 8) | m_nNewByte;
+						m_nWord = (m_nWord << 8) | m_nNewByte;
+						datavec.push_back(m_nDataByte);
+						m_testVec[m_nIndex] = in[i];
+						// std::cout << "Switch state 2, i = " << i << std::endl;
+						
+						m_nInvWord = __builtin_bswap32(m_nWord);
+						
+						// do-while could be used here?
+						if((_mm_popcnt_u32(m_nPostamble^m_nWord)) == 0)
+						{
+							std::cout << "SYNC -> SEARCH" << std::endl;
+							m_SyncState = SYNC_SEARCH;
+						}
+						else if((_mm_popcnt_u32(m_nPostamble^m_nInvWord)) == 0)
+						{
+							std::cout << "SYNC -> SEARCH" << std::endl;
+							m_SyncState = SYNC_SEARCH;
+						}
+						++m_nDecodedBytes;
+						++m_nIndex;
+						
+						break;
+				}
+		}
+		std::cout << "Decoded bytes:" << m_nDecodedBytes << std::endl;
+
+		// DATA VALIDATION BELOW
+		
+		GEN_HEADER m_sGenHeader;
+		memcpy(&m_sGenHeader.nMsgType, (m_testVec + 4), (2 * sizeof(uint32_t)));
+		std::cout << "Msg type: " << m_sGenHeader.nMsgType << std::endl;
+		std::cout << "Tab type: " << m_sGenHeader.nTabType << std::endl;
+		// writing message type to parent function
+		nMsgType = m_sGenHeader.nMsgType;	
+
+		return;
+	}
+
 	/* SetupServer() - Creates a TCP server that listens to port 8888. The server can handle up to 10 connections at any time
 	*	inputs: none
 	*	outputs: none
@@ -193,6 +296,7 @@ namespace server{
 		int m_nSockDesc;
 		int m_nMaxSock;
 		uint32_t m_nValread;
+		uint32_t m_nMsgType;
 		struct sockaddr_in m_sAddress;
 		uint8_t buffer[1025];  
 
@@ -232,7 +336,7 @@ namespace server{
 	        perror("bind failed");  
 	        exit(EXIT_FAILURE);  
 	    }  
-	    printf("Listener on port %d \n", PORT);  
+	    std::cout << "Listening on port " << PORT << std::endl;
 	         
 	    //try to specify maximum of 3 pending connections for the master socket 
 	    if (listen(m_nMasterSock, 3) < 0)  
@@ -275,7 +379,7 @@ namespace server{
 	       
 	        if ((m_nActivity < 0) && (errno!=EINTR))  
 	        {  
-	            printf("select error");  
+	            std::cout << "select error" << std::endl;
 	        }  
 	             
 	        //If something happened on the master socket , 
@@ -290,8 +394,8 @@ namespace server{
 	            }  
 	             
 	            //inform user of socket number - used in send and receive commands 
-	            printf("New connection , socket fd is %d , ip is : %s , port : %d \n" , m_nNewSock ,inet_ntoa(m_sAddress.sin_addr) ,ntohs(m_sAddress.sin_port));  
-	           	                           
+	           	std::cout << "New connection, socket fd: " << m_nNewSock << " ip: " << inet_ntoa(m_sAddress.sin_addr) << " port: " << ntohs(m_sAddress.sin_port)
+	           	<< std::endl;
 	            //add new socket to array of sockets 
 	            for (int i = 0; i < m_nMaxClients; i++)  
 	            {  
@@ -317,7 +421,7 @@ namespace server{
 	                {  
 	                    // Client disconnected, print details
 	                    getpeername(m_nSockDesc , (struct sockaddr*)&m_sAddress , (socklen_t*)&m_nAddrlen);  
-	                    std::cout << "Host disconnected, ip: " << inet_ntoa(m_sAddress.sin_addr) << "port: " << ntohs(m_sAddress.sin_port) <<  std::endl;
+	                    std::cout << "Host disconnected, ip: " << inet_ntoa(m_sAddress.sin_addr) << " port: " << ntohs(m_sAddress.sin_port) <<  std::endl;
 	                    // Close the socket and mark as 0 in list for reuse 
 	                    close( m_nSockDesc );
 	                    m_nClientSock[i] = 0;  
@@ -327,6 +431,7 @@ namespace server{
 	                else 
 	                {  
 	                	// This is where received messages are dispatched to a message handler or sync function	                    	                    
+	                    // server::FindAsmOne(buffer, m_nMsgType);
 	                    ServerFuncs::MsgHandler(m_nSockDesc, buffer, m_nValread);
 	                }  
 	            }  
