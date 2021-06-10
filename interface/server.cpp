@@ -10,7 +10,6 @@
 
 namespace server{
 	
-	// WIP WIP WIP WIP
 	void FindAsmOne(const uint8_t *in, uint32_t& nMsgType)
 	{
 		uint8_t m_nNewByte;
@@ -124,7 +123,7 @@ namespace server{
 		int m_nIndex = 0;
 		std::vector<uint8_t> datavec;
 		SYNC_STATE m_SyncState = SYNC_SEARCH;
-		uint32_t nDataLen = 1000;	// Max data lengt, will be changed when preamble is found
+		uint32_t nDataLen = 1024;	// Max data lengt, will be changed when preamble is found
 		
 		std::cout << "############### ASM 2 SYNC FUNCTION ###############" << std::endl;
 
@@ -373,8 +372,8 @@ namespace server{
 	                m_nMaxSock = m_nSockDesc;  
 	        }  
 	     
-	        //wait for an activity on one of the sockets , timeout is NULL , 
-	        //so wait indefinitely 
+	        // wait for an activity on one of the sockets , timeout is NULL , 
+	        // so wait indefinitely 
 	        m_nActivity = select( m_nMaxSock + 1 , &readfds , NULL , NULL , NULL);  
 	       
 	        if ((m_nActivity < 0) && (errno!=EINTR))  
@@ -382,8 +381,7 @@ namespace server{
 	            std::cout << "select error" << std::endl;
 	        }  
 	             
-	        //If something happened on the master socket , 
-	        //then its an incoming connection 
+	        // If something happened on the master socket its an incoming connection 
 	        if (FD_ISSET(m_nMasterSock, &readfds))  
 	        {  
 	            if ((m_nNewSock = accept(m_nMasterSock, 
