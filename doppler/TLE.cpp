@@ -174,12 +174,15 @@ long parseEpoch(ElsetRec *rec, char *str)
     }
     mon = ind+1;
     day = doy;
+    // Call to jday here, changes data stored in epoch parameters in rec
+    // creates jdut1 for the date of the epoch of the TLE
     jday(year, mon, day, hr, mn, sec, &rec->jdsatepoch, &rec->jdsatepochF);
 
     double diff = rec->jdsatepoch - 2440587.5;
     double diff2 = 86400000.0*rec->jdsatepochF;
     diff*=86400000.0;
 
+    // returns milisec since when in a long
     long epoch = (long)diff2;
     epoch+=(long)diff;
     return epoch;

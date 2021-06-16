@@ -1,9 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <math.h>
-#include <iomanip>
-#include "TLE.h"
 #include "test1.h"
 
 typedef struct VERIN {
@@ -151,6 +145,9 @@ void testImport()
     char m_cOutputLine[256];
     int m_nLineIndex;
     TLE tle;
+    
+    // double gsto = gstime_SPG4(jdut1);
+
 
     std::cout << "############## testImport() ###########" << std::endl;
     in_file = fopen("tles/aalto1.TLE","r");
@@ -187,16 +184,43 @@ void testImport()
     tle.parseLines(lineOne, lineTwo);
     std::cout << "Return from parseLines" << std::endl;
     
+    // fix the reference to satrec
+    double jdut1 = (tle.rec.jdsatepoch + tle.rec.jdsatepochF) - 2433281.5;
     long time = mSecSince1970();
     long m_nPassTimes[1440];
     double m_dPosVec[1440][3];
     double m_dVelVec[1440][3];
     double *m_pnPos;
     double *m_pnVel;
+    double m_dJdayTLE = tle.rec.jdsatepoch + tle.rec.jdsatepochF;
+    double m_dJdayNow;
+    double testTime = difftime(time, tle.epoch);
 
+    // test
+
+    double diff = (double)time - tle.epoch;
+    diff/=60000.0;
+    std::cout << "Minutes since epoch: "<< std::fixed << std::setprecision(3) << diff << std::endl;
+
+    /*
+    std::cout << "Epoch from TLE object: " << tle.epoch << std::endl;
+    std::cout << "Time in milisec since 1970: " << time << std::endl;
+    std::cout << "Hours between now and epoch: "<< std::fixed << std::setprecision(3) << testTime/86400 << std::endl;
+    std::cout << "JDUT1: " << std::fixed << std::setprecision(5) << jdut1 << std::endl;
+    std::cout << "jd epoch day: " << std::fixed << std::setprecision(5) << tle.rec.jdsatepoch << std::endl;
+    std::cout << "jd epoch frac day: " << std::fixed << std::setprecision(5) << tle.rec.jdsatepochF << std::endl;
+    std::cout << "combined jday double: " << std::fixed << std::setprecision(8) << m_dJdayTLE << std::endl;
     // make a time vector with 2 minute spacing and get RV vectors for each time
+    */
+    
+    m_dJdayNow = currentJdut1();
+    double gsto = gstime(m_dJdayNow);
+    std::cout << "GMST (deg) = " << std::fixed << std::setprecision(5) << gsto*360/twopi << std::endl;
+    // then add rotation of today? or is it already included?
+
     for(int i = 0; i < 1440; i++)
     {
+        // insert jdates here?
         m_nPassTimes[i] = time + (2 * 60 * 1000 * i);
         m_pnPos = &m_dPosVec[i][0];
         m_pnVel = &m_dVelVec[i][0];
@@ -204,8 +228,22 @@ void testImport()
         tle.TLE::getRVForDate(m_nPassTimes[i], m_pnPos, m_pnVel);
     }
 
-    // Now we have r and v vectors in ECI and need to transform to SEZ to check against elevation
-    // of our ground station to find passes
+    // rotate Position vector from TEME (SGP4 output) to PEF (ECF)
+    teme2pef(m_pnPos, gsto);
+
+    /* FIND PASSES:
+    *   The satellite r vector needs to be converted to SEZ and added with the r_site vector (ground station location) to find
+    *   passes (Elevation > 0 deg). Once passes are found we can compute the Doppler profile for the pass
+    *   r_ECI = r_siteECI + p_ECI where p_ECI is the SEZ->ECI rotation of the ground station Az, El, Range vector  
+    */  
+
+
+    /*  DOPPLER SHIFT:
+    * Now we have satellite r and v vectors in Earth-Centered Inertial (ECI) and need to either convert our ground station r and v vectors
+    *   from Topocentric coordinate system (SEZ) to ECI or convert satellite r and v to SEZ to be able to calculate the relative velocity
+    *   once the relative velocity is known it is simple to compute the Doppler shift based on the velocity and carrier frequency
+    *
+    */
 
     for(int i = 0; i < 3; i++)
     {
@@ -237,12 +275,99 @@ long mSecSince1970()
     return m_nMiliSec;
 }
 
+void teme2pef(double *vec, double gsto)
+{
+    double rotMat[3][3];
+
+    // Need to get Jdate
+
+    rotMat[0][0] = cos(gsto);       rotMat[0][1] = sin(gsto);   rotMat[0][2] = 0;
+    rotMat[1][0] = -1 * sin(gsto);  rotMat[1][1] = cos(gsto);   rotMat[1][2] = 0;
+    rotMat[2][0] = 0;               rotMat[2][1] = 0;           rotMat[2][2] = 1;
+
+    vec[0] = rotMat[0][0] * vec[0] + rotMat[0][1] * vec[1] + rotMat[0][2] * vec[2];
+    vec[1] = rotMat[1][0] * vec[0] + rotMat[1][1] * vec[1] + rotMat[1][2] * vec[2];
+    vec[2] = rotMat[2][0] * vec[0] + rotMat[2][1] * vec[1] + rotMat[2][2] * vec[2];
+    
+
+    return;
+}
+
+void printDate()
+{
+    int year;
+    int mon;
+    int day;
+    int hour;
+    int min;
+    double sec;
+    double j_day;
+    double j_dayfrac;
+    double *jd = &j_day;;
+    double *jdfrac = &j_dayfrac;
+
+
+    std::time_t t = std::time(0);   // get time now
+    std::tm* now = std::gmtime(&t);
+    std::cout << (now->tm_year + 1900) << '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << "\n";
+
+    year = now->tm_year + 1900;
+    mon = now->tm_mon + 1;
+    day = now->tm_mday;
+    hour = now->tm_hour;
+    min = now->tm_min;
+    sec = now->tm_sec;
+
+    std::cout << "YYYY-MM-DD: " << year << mon <<  day << std::endl;
+    std::cout << "HH-MM-SS: " << hour << min <<  sec << std::endl;
+    // Using Vallado's jday function from SGP4.c or SGP4.cpp
+    jday(year, mon,  day, hour, min, sec, &j_day, &j_dayfrac);
+
+    std::cout << "j_day: " <<  std::fixed << std::setprecision(2) << j_day << std::endl;   
+    std::cout << "j_dayfrac: " <<  std::fixed << std::setprecision(5) << j_dayfrac << std::endl;
+    std::cout << "combined jday: " <<  std::fixed << std::setprecision(5) << j_day + j_dayfrac << std::endl;   
+
+    return;
+}
+/*  currentJdut1 - returns the Julian Day in UT1 (i think) based on the current sys time (UTC)
+*
+*
+*/
+double currentJdut1()
+{
+    int m_nYear;
+    int m_nMon;
+    int m_nDay;
+    int m_nHour;
+    int m_nMin;
+    double m_dSec;
+    double m_dJday;
+    double m_dJdayFrac;
+    
+
+
+    std::time_t t = std::time(0);   // get time now
+    std::tm* now = std::gmtime(&t);
+    
+    m_nYear = now->tm_year + 1900;
+    m_nMon = now->tm_mon + 1;
+    m_nDay = now->tm_mday;
+    m_nHour = now->tm_hour;
+    m_nMin = now->tm_min;
+    m_dSec = now->tm_sec;
+
+    // Using Vallado's jday function from SGP4.c or SGP4.cpp
+    jday(m_nYear, m_nMon, m_nDay, m_nHour, m_nMin, m_dSec, &m_dJday, &m_dJdayFrac);
+
+    return m_dJday + m_dJdayFrac;
+}
 
 int main(void)
 {
     int cnt = 0;
     VERIN *verins = NULL;
 
+    printDate();
     testImport();
 
     
