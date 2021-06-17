@@ -36,7 +36,7 @@ void TLE::parseLines(char *line1, char *line2)
     this->line1[69]=0;
     this->line2[69]=0;
 
-    std::cout << "################# TLE::parseLines #################" << std::endl;
+    // std::cout << "################# TLE::parseLines #################" << std::endl;
 
            //          1         2         3         4         5         6
                //0123456789012345678901234567890123456789012345678901234567890123456789
