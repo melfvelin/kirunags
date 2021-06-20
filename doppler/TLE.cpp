@@ -50,12 +50,6 @@ void TLE::parseLines(char *line1, char *line2)
 
     //this->objectNum = (int)gd(line1,2,7);
     strncpy(this->objectID,&line1[2],5);
-    std::cout << "Object ID: " ;
-    for(int i = 0; i < strlen(objectID); i++)
-    {
-        std::cout << objectID[i];
-    }
-    std::cout << " " << std::endl;
     this->ndot = gdi(line1,35,44);
     if(line1[33]=='-') this->ndot *= -1.0;
 

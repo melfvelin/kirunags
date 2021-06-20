@@ -12,16 +12,22 @@
 
 #include "TLE.h"
 #include "SGP4.h"
+#include "orbitPrediction.h"
 
 void testImport();
+double dopplerShift(double dRange, double dRangeDt, double Dt);
 long mSecSince1970();
-void teme2pef(double *vec, double gsto);
-void pef2sez(double *dpVecSez, double *dpVecPef, double dLatGeod, double dLonGeod);
+void teme2pef(double *pdPosVecPef, double *pdPosVecTeme, double gsto);
+void pef2sez(double dpVecSez[], double *dpVecPef, double dLatGeod, double dLonGeod);
 double getGeocentricLatitude(double dLatGeod);
 void printDate();
 double currentJdut1(std::time_t *t);
 void gsCoord(double *pdCoordVec, double dlatGeod, double dLonGeod, double dAltitude);
 void getAngles(double *dGsSatVecSez, double& dElev, double& dAz, double& dRange);
 double rad2deg(double dRad);
+double deg2Rad(double dDeg);
+int passFinder(double *m_pdPassTimes);
+void testArr(double arr[]);
+void getDopplerProfile(double dTimeStamp);
 
 #endif
