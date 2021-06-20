@@ -544,7 +544,7 @@ int passFinder(double *m_pdPassTimes)
         {
             elevcount++;
 
-            if(i > 0)
+            if(i > 0)       // Could be two conditions in one if
             {
                 if(m_dElev[i-1] <= 0.0)     // If previous elevation was <= 0
                 {
@@ -582,6 +582,7 @@ int passFinder(double *m_pdPassTimes)
     return 0;
 } /* passFinder() */
 
+// destroy this
 void testArr(double arr[])
 {
     arr[0] = 1.5;
@@ -602,10 +603,10 @@ void getDopplerProfile(double dTimeStamp)
     double m_dTimeStamp[1800];
     double *m_pdResults = nullptr;
     m_pdResults = new double[5];
-
+    // Implement AOS and LOS variables
 
     m_pdPassTimes[0] = dTimeStamp - 60 * 10;        // set start time to 10 minutes before AOS
-    std::time_t timeArg = time(0);
+    std::time_t timeArg = time(0);                  // init a time_t object, stored time will be changed
 
     for(int i = 0; i < 1800; i++)
     {
@@ -613,12 +614,12 @@ void getDopplerProfile(double dTimeStamp)
     }
 
     std::cout << "El:   Az:   Range:   Doppler:   " << std::endl;
-
+    // Print date here? Use AOS time?
     // get angles for pass
     for(int i = 0; i < 1000; i++)
     {      
         timeArg = m_pdPassTimes[i];
-        m_pdResults = instantPredict(timeArg);
+        m_pdResults = instantPredict(timeArg);      // get angles for each second of the pass, store in doubles
         m_dElev[i] = m_pdResults[0];
         m_dAz[i] = m_pdResults[1];
         m_dRange[i] = m_pdResults[2];
@@ -633,10 +634,47 @@ void getDopplerProfile(double dTimeStamp)
     return;
 }
 
+void printDate(std::time_t t)
+{
+    int year;
+    int mon;
+    int day;
+    int hour;
+    int min;
+    double sec;
+    double j_day;
+    double j_dayfrac;
+    double *jd = &j_day;;
+    double *jdfrac = &j_dayfrac;
+
+
+    // std::time_t t = std::time(0);   // get time now
+    std::tm* now = std::gmtime(&t);
+    std::cout << (now->tm_year + 1900) << '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << "\n";
+
+    year = now->tm_year + 1900;
+    mon = now->tm_mon + 1;
+    day = now->tm_mday;
+    hour = now->tm_hour;
+    min = now->tm_min;
+    sec = now->tm_sec;
+
+    std::cout << "YYYY-MM-DD: " << year << mon <<  day << std::endl;
+    std::cout << "HH-MM-SS: " << hour << min <<  sec << std::endl;
+    // Using Vallado's jday function from SGP4.c or SGP4.cpp
+    jday(year, mon,  day, hour, min, sec, &j_day, &j_dayfrac);
+
+    std::cout << "j_day: " <<  std::fixed << std::setprecision(2) << j_day << std::endl;   
+    std::cout << "j_dayfrac: " <<  std::fixed << std::setprecision(5) << j_dayfrac << std::endl;
+    std::cout << "combined jday: " <<  std::fixed << std::setprecision(5) << j_day + j_dayfrac << std::endl;   
+
+    return;
+}
+
 int main(void)
 {
 
-    //printDate();
+    
     //testImport();
     double Angles[5];
     double *doubPtr;
@@ -670,7 +708,7 @@ int main(void)
 
     std::cout << m_nPasscount << " passes were found, pls select one to get angles for: " << std::endl;
     std::cin >> m_nPass;
-
+    // this function modifies pass times? Yes results are stored here
     getDopplerProfile(m_pdPassTimes[m_nPass]);
 
     delete m_pdPassTimes;

@@ -4,62 +4,64 @@
 
 double *instantPredict(std::time_t timeObject)
 {
-	char satID[40];
+	// Initialization of file handling variables
+    char satID[40];
     char lineOne[70];
     char lineTwo[70];
     FILE *in_file = NULL;
-    char m_cOutputLine[256];
-    int m_nLineIndex;
+    // Init of TLE object implemented by TLE.cpp
     TLE tle;
 
-    long time = mSecSince1970();
-    double m_dPosVec[3];
-    double m_dVelVec[3];
-    double m_dJdayTLE = tle.rec.jdsatepoch + tle.rec.jdsatepochF;
+    // Init of time variables
     double m_dJdayNow;
-    
-    double Pvec[3] = {0};
-    double Vvec[3] = {0};
-    double PvecDt[3] = {0};
-    double VvecDt[3] = {0};
+    double m_dTimeStamp;
+
+    /* Init of position vectors in all coordinate frames for t0 and t0+dt
+        teme = true equator mean equinox, pef = pseudo earth fixed, sez = topocentric horizon */
+    double m_dPosVecTeme[3] = {0};
+    double m_dPosVecTemeDt[3] = {0};
     double m_dPosVecPef[3] = {0};
     double m_dPosVecPefDt[3] = {0};
+    double m_dGsSatVecPef[3] = {0};
+    double m_dGsSatVecPefDt[3] = {0};
+    double m_dGsSatVecSez[3];
+    double m_dGsSatVecSezDt[3];
+    double m_dGsVecPef[3];
+
+    /* Init of velocity vectors, these are not used as of now but can be used
+        to compute Doppler shift analytically yielding higher accuracy      */
+    double m_dVelVec[3] = {0};
+    double m_dVelVecDt[3] = {0};
+    // Init Dt, time between state vectors used for Doppler calculation
     double Dt = 1;
     
-    double m_dGsVecPef[3];
+    // Init of GS latitude and longitude (geodetic) change gs position here
     double m_dLatGeod = deg2Rad(67.8404);
     double m_dLonGeod = deg2Rad(20.4105);
-    double m_dAltitude = 0.4;       // km?
+    double m_dAltitude = 0.4;       
 
+    // Init variables for range and angels 
     double m_dRange;
     double m_dElev;
     double m_dAz;
-
-    double m_dRetVals[4];
-
     double m_dRangeDt;
     double m_dElevDt;
     double m_dAzDt;
 
-    double m_dGsSatVecPef[3] = {0};
-    double m_dGsSatVecPefDt[3] = {0};
+    // double check before removing
+    double m_dRetVals[4];
 
-    double m_dGsSatVecSez[3];
-    double m_dGsSatVecSezDt[3];
-
-    double m_dTimeStamp;
-
+    // Init of return values
     double *m_pdRetVals = nullptr;
     m_pdRetVals = new double[5];
-
+    
     // double gsto = gstime_SPG4(jdut1);
-
 
     #ifdef debug
         std::cout << "############## testImport() ###########" << std::endl;
     #endif /* debug */
-
     
+    // Try using a string for file location
     in_file = fopen("tles/aalto1.TLE","r");
 
     if(in_file != NULL)
@@ -103,7 +105,7 @@ double *instantPredict(std::time_t timeObject)
     // get orbital elements from TLE file 
     tle.parseLines(lineOne, lineTwo);
     
-    // std::time_t timeObject = std::time(0);
+    // Get current Julian day and GMST angle
     m_dJdayNow = currentJdut1(&timeObject);
     double gsto = gstime(m_dJdayNow);
 
@@ -113,23 +115,25 @@ double *instantPredict(std::time_t timeObject)
     #endif /* debug */
 
     // using the same gmst for delta t = 1 sec
-    tle.TLE::getRVForDate(timeObject*1000, Pvec, Vvec);     // may need to send in a milisecsince1970 long
-    tle.TLE::getRVForDate((timeObject*1000 + 1000 * Dt), PvecDt, VvecDt);
-    teme2pef(m_dPosVecPef, Pvec, gsto);
-    teme2pef(m_dPosVecPefDt, PvecDt, gsto);
+    tle.TLE::getRVForDate(timeObject*1000, m_dPosVecTeme, m_dVelVec);
+    tle.TLE::getRVForDate((timeObject*1000 + 1000 * Dt), m_dPosVecTemeDt, m_dVelVecDt);
+    
+    // TEME -> PEF transform for Position vectors
+    teme2pef(m_dPosVecPef, m_dPosVecTeme, gsto);
+    teme2pef(m_dPosVecPefDt, m_dPosVecTemeDt, gsto);
 
+    // Compute ground station position vector in PEF
     gsCoord(m_dGsVecPef, m_dLatGeod, m_dLonGeod, m_dAltitude);
 
     
-    // Computation of terminal - satellite vector in PEF (ECF) coordinates
-    
+    // Computation of gs - satellite vector in PEF
     for(int i = 0; i < 3; i ++)
     {
         m_dGsSatVecPef[i] = m_dPosVecPef[i] - m_dGsVecPef[i];
         m_dGsSatVecPefDt[i] = m_dPosVecPefDt[i] - m_dGsVecPef[i];        
     }
 
-    // Transformation of ground station - satellite vector to topocentric (SEZ) coordinates
+    // Transformation of ground station - satellite vector to SEZ 
     pef2sez(m_dGsSatVecSez, m_dGsSatVecPef, m_dLatGeod, m_dLonGeod);
     pef2sez(m_dGsSatVecSezDt, m_dGsSatVecPefDt, m_dLatGeod, m_dLonGeod);
 
