@@ -708,7 +708,7 @@ int main(void)
 
     std::cout << m_nPasscount << " passes were found, pls select one to get angles for: " << std::endl;
     std::cin >> m_nPass;
-    // this function modifies pass times? Yes results are stored here
+    // this function modifies pass times? No
     getDopplerProfile(m_pdPassTimes[m_nPass]);
 
     delete m_pdPassTimes;
