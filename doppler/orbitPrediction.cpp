@@ -1,7 +1,7 @@
 // orbitPrediction
 #include "orbitPrediction.h"
 
-
+// fix tle import
 double *instantPredict(std::time_t timeObject)
 {
 	// Initialization of file handling variables
@@ -62,7 +62,7 @@ double *instantPredict(std::time_t timeObject)
     #endif /* debug */
     
     // Try using a string for file location
-    in_file = fopen("tles/aalto1.TLE","r");
+    in_file = fopen("tles/estcube1.TLE","r");
 
     if(in_file != NULL)
     {
@@ -154,6 +154,7 @@ double *instantPredict(std::time_t timeObject)
     
 
     m_pdRetVals[0] = rad2deg(m_dElev);
+    std::cout << "Az (rad): " << std::fixed << std::setprecision(2) << m_dAz << std::endl;
     m_pdRetVals[1] = rad2deg(m_dAz);
     m_pdRetVals[2] = m_dRange;
     m_pdRetVals[3] = dopplerShift(m_dRange, m_dRangeDt, Dt);

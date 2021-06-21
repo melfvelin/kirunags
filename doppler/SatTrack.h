@@ -1,5 +1,5 @@
-#ifndef __test1__h
-#define __test1__h  
+#ifndef __SATTRACK__H
+#define __SATTRACK__H  
 
 #include <ctime>
 #include <stdio.h>
