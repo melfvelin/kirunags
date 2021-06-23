@@ -513,7 +513,7 @@ int findAOSLOS(double dStartTime, double& dAosTime, double& dLosTime)
     #endif /* debug */
     
     dLosTime = m_dTimeStamp;
-    delete m_pdResults;
+    delete[] m_pdResults;
     return 0;
 } 
 /* printLivePass - takes a time_t object with AOS time and prints out antenna angles live
@@ -653,7 +653,7 @@ int main(void)
     
     printLivePass(m_dAosTime);
 
-    delete m_pdPassTimes;
+    delete[] m_pdPassTimes;
     
     return 0;
 }

@@ -15,7 +15,7 @@
 */
 double *instantPredict(std::time_t timeObject)
 {
-	// Initialization of file handling variables
+    // Initialization of file handling variables
     char satID[40];
     char lineOne[70];
     char lineTwo[70];
@@ -71,7 +71,7 @@ double *instantPredict(std::time_t timeObject)
     #endif /* debug */
     
     // change satellite by changing TLE here
-    in_file = fopen("tles/estcube1.TLE","r");
+    in_file = fopen("tles/gomx4b.TLE","r");
 
     if(in_file != NULL)
     {
@@ -163,7 +163,7 @@ double *instantPredict(std::time_t timeObject)
     m_pdRetVals[0] = rad2deg(m_dElev);
     m_pdRetVals[1] = rad2deg(m_dAz);
     m_pdRetVals[2] = m_dRange;
-    m_pdRetVals[3] = dopplerShift(m_dRange, m_dRangeDt, Dt);
+    m_pdRetVals[3] = -1 * dopplerShift(m_dRange, m_dRangeDt, Dt);
     m_pdRetVals[4] = (double)timeObject;
 
     return m_pdRetVals;

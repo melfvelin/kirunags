@@ -1,325 +1,7 @@
 #include "test1.h"
-// remove this
-typedef struct VERIN {
-    char line1[70];
-    char line2[70];
-    double startmin;
-    double stepmin;
-    double stopmin;
-} VERIN;
-
-/**
- * returns the count of verins read and sets the point to an array created with malloc. remove!
- */
-int readVERINs(VERIN **listptr)
-{
-    char line[256];
-    char *str = NULL;
-    FILE *in_file = NULL;
-    VERIN *verins = NULL;
-    int cnt = 0;
 
 
-    in_file = fopen("../../data/SGP4-VER.TLE","r");
-    
-    while(fgets(line,255,in_file) != NULL)
-    {
-        if(line[0]=='1')cnt++;
-    }
-
-    if(in_file)
-    {
-        fclose(in_file);
-    }
-
-    verins = (VERIN*)malloc(cnt*sizeof(VERIN));
-    *listptr = verins;
-
-    cnt = 0;
-    in_file = fopen("../../data/SGP4-VER.TLE","r");
-    
-    while(fgets(line,255,in_file) != NULL)
-    {
-        if(line[0]=='1')
-        {
-            strncpy(verins[cnt].line1,line,69);
-            verins[cnt].line1[69]=0;
-            fgets(line,255,in_file);
-            strncpy(verins[cnt].line2,line,69);
-            verins[cnt].line2[69]=0;
-            str = &line[70];
-            sscanf(str,"%lf %lf %lf",&verins[cnt].startmin,&verins[cnt].stopmin,&verins[cnt].stepmin);
-            cnt++;
-        }
-    }
-
-    if(in_file)
-    {
-        fclose(in_file);
-    }
-
-    return cnt;
-}
-
-/**
- * 2-norm distance for two three vectors
- */
-double dist(double *v1, double *v2)
-{
-    double dist = 0;
-    double tmp = 0;
-
-    // just unroll the loop
-    tmp = v1[0]-v2[0];
-    dist += tmp*tmp;
-    tmp = v1[1]-v2[1];
-    dist += tmp*tmp;
-    tmp = v1[2]-v2[2];
-    dist += tmp*tmp;
-
-    return sqrt(dist);
-}
-// remove
-void runVER(VERIN *verins, int cnt)
-{
-    FILE *in_file = NULL;
-    TLE tle;
-    double r[3];
-    double v[3];
-    double rv[3];
-    double vv[3];
-    double mins = 0;
-    char line[256];
-    int i=-1;
-    char *ind = NULL;
-    double rdist = 0;
-    double vdist = 0;
-    double rerr = 0;
-    double verr = 0;
-    int cnt2 = 0;
-
-    in_file = fopen("../../data/tcppver.out","r");
-
-    while(fgets(line,255,in_file) != NULL && i <cnt)
-    {
-        ind = strstr(line,"xx");
-        if(ind != NULL)
-        {
-            i++;
-            // parseLines is called with two arguments (char pointers)
-            tle.parseLines(verins[i].line1,verins[i].line2);
-        } 
-        else
-        {
-            sscanf(line,"%lf %lf %lf %lf %lf %lf %lf\n",&mins,rv,&rv[1],&rv[2],vv,&vv[1],&vv[2]);
-            tle.getRV(mins,r,v);
-            rdist = dist(r,rv);
-            vdist = dist(v,vv);
-            rerr += rdist;
-            verr += vdist;
-            cnt2++;
-            if(rdist > 1e-7 || vdist > 1e-8)
-            {
-                printf("%s %lf %e %e\n",tle.objectID,mins,rdist,vdist);
-            }
-        }
-    }
-
-    rerr = rerr/cnt2;
-    verr = verr/cnt2;
-
-    printf("Typical edits r=%e mm, v=%e mm/s\n",1e6*rerr,1e6*verr);
-
-    if(in_file)
-    {
-        fclose(in_file);
-    }
-}
-
-// remove this whole function?
-void testImport()
-{
-    char satID[40];
-    char lineOne[70];
-    char lineTwo[70];
-    FILE *in_file = NULL;
-    char m_cOutputLine[256];
-    int m_nLineIndex;
-    TLE tle;
-    
-    // double gsto = gstime_SPG4(jdut1);
-
-
-    // std::cout << "############## testImport() ###########" << std::endl;
-    //in_file = fopen("tles/aalto1.TLE","r");
-    in_file = fopen("tles/alfarabi1.TLE","r");
-
-    if(in_file != NULL)
-    {
-        std::cout << "File opened successfully" << std::endl;    
-    }
-
-    if ((fgets(satID, 39, in_file)) != NULL )
-    {
-        std::cout << "Satellite ID read successfully" << std::endl;       
-    }
-    
-    if ((fgets(lineOne, 255, in_file)) != NULL )
-    {
-        std::cout << "First line read successfully" << std::endl;       
-    }
-
-    if ((fgets(lineTwo, 255, in_file)) != NULL )
-    {
-        std::cout << "Second line read successfully" << std::endl;       
-    }
-
-    if(in_file)
-    {
-        fclose(in_file);
-    }
-
-    std::cout << "Sat ID: " << satID << std::endl;
-    std::cout << "First line: " << lineOne << std::endl;
-    std::cout << "Second line: " << lineTwo << std::endl;
-
-    tle.parseLines(lineOne, lineTwo);
-    std::cout << "Return from parseLines" << std::endl;
-    
-    // fix the reference to satrec
-    // double jdut1 = (tle.rec.jdsatepoch + tle.rec.jdsatepochF) - 2433281.5; // don't need the JD of satellite epoch in this file
-    // long time = mSecSince1970();
-    long m_nPassTimes[1440];
-    double m_dJDPassTimes[1440];
-    double m_dPosVec[1440][3];
-    double m_dVelVec[1440][3];
-    double *m_pnPos;
-    double *m_pnVel;
-    double m_dJdayTLE = tle.rec.jdsatepoch + tle.rec.jdsatepochF;
-    double m_dJdayNow;
-
-    // The epoch used in SGP4 is days from jan 0, 1950. 0 hr
-    
-    std::time_t timeObject = std::time(0);
-    m_dJdayNow = currentJdut1(&timeObject);
-    double gsto = gstime(m_dJdayNow);
-
-    #ifdef debug
-    std::cout << "GMST (deg) = " << std::fixed << std::setprecision(5) << rad2deg(gsto) << std::endl;
-    std::cout << "Current JD = " << std::fixed << std::setprecision(8) << m_dJdayNow << std::endl;
-    #endif /* debug */
-
-    std::time_t tNow = std::time(0);
-    // This loop calculates state vectors for 2 days forward from NOW with 120 sec step
-    for(int i = 0; i < 1440; i++)
-    {
-        // insert jdates here?
-        //m_nPassTimes[i] = time + (2 * 60 * 1000 * i);
-        //timeObject += 2 * 60;
-        timeObject = tNow + 2 * 60 * i;                   // will start at Tnow + 2 min and end at Tnow + 2 days
-        m_nPassTimes[i] = timeObject * 1000;
-        m_dJDPassTimes[i] = currentJdut1(&timeObject);
-        m_pnPos = &m_dPosVec[i][0];
-        m_pnVel = &m_dVelVec[i][0];
-
-        tle.TLE::getRVForDate(m_nPassTimes[i], m_pnPos, m_pnVel);
-
-        if(i == 0)
-        {
-            std::cout << "ECI P0: " << std::fixed << std::setprecision(5) << m_dPosVec[i][0] << std::endl;
-            std::cout << "ECI P1: " << std::fixed << std::setprecision(5) << m_dPosVec[i][1] << std::endl;
-            std::cout << "ECI P2: " << std::fixed << std::setprecision(5) << m_dPosVec[i][2] << std::endl;
-        }
-        gsto = gstime(m_dJDPassTimes[i]);
-        //teme2pef(m_pnPos, gsto);
-
-        if(i == 0)
-        {
-            std::cout << "ECF P0: " << std::fixed << std::setprecision(5) << m_dPosVec[i][0] << std::endl;
-            std::cout << "ECF P1: " << std::fixed << std::setprecision(5) << m_dPosVec[i][1] << std::endl;
-            std::cout << "ECF P2: " << std::fixed << std::setprecision(5) << m_dPosVec[i][2] << std::endl;
-        }
-    }
-
-    #ifdef debug
-    std::cout << "Start JD = " << std::fixed << std::setprecision(5) << m_dJDPassTimes[0] << std::endl;
-    std::cout << "End JD = " << std::fixed << std::setprecision(5) << m_dJDPassTimes[1439] << std::endl;
-    #endif /* debug */
-
-    // rotate Position vector from TEME (SGP4 output) to PEF (ECF)
-    double Pvec[3] = {0};
-    double Vvec[3] = {0};
-    double PvecDt[3] = {0};
-    double VvecDt[3] = {0};
-    double m_dPosVecPef[3] = {0};
-    double m_dPosVecPefDt[3] = {0};
-    double Dt = 1;
-    // using the same gmst for delta t = 10 sec
-    tle.TLE::getRVForDate(timeObject*1000, Pvec, Vvec);     // may need to send in a milisecsince1970 long
-    tle.TLE::getRVForDate((timeObject*1000 + 1000 * Dt), PvecDt, VvecDt);
-    teme2pef(m_dPosVecPef, Pvec, gsto);
-    teme2pef(m_dPosVecPefDt, PvecDt, gsto);
-
-    // Computation of ground station position vector in PEF
-    double m_dGsVecPef[3];
-    double m_dLatGeod = deg2Rad(67.8404);
-    double m_dLonGeod = deg2Rad(20.4105);
-    double m_dAltitude = 0.4;       // km?
-    
-    gsCoord(m_dGsVecPef, m_dLatGeod, m_dLonGeod, m_dAltitude);
-    
-    for(int i = 0; i < 3; i++)
-    {
-        std::cout << " P_pef[" <<  i << "] = " << std::fixed << std::setprecision(4) << m_dGsVecPef[i];
-     
-    }
-    std::cout << " " << std::endl;
-
-    
-    // Computation of terminal - satellite vector in PEF (ECF) coordinates
-    double m_dGsSatVecPef[3] = {0};
-    double m_dGsSatVecPefDt[3] = {0};
-
-    for(int i = 0; i < 3; i ++)
-    {
-        m_dGsSatVecPef[i] = m_dPosVecPef[i] - m_dGsVecPef[i];
-        m_dGsSatVecPefDt[i] = m_dPosVecPefDt[i] - m_dGsVecPef[i];        
-    }
-    
-    double m_dGsSatVecSez[3];
-    double m_dGsSatVecSezDt[3];
-
-    // Transformation of ground station - satellite vector to topocentric (SEZ) coordinates
-    pef2sez(m_dGsSatVecSez, m_dGsSatVecPef, m_dLatGeod, m_dLonGeod);
-    pef2sez(m_dGsSatVecSezDt, m_dGsSatVecPefDt, m_dLatGeod, m_dLonGeod);
-
-    for(int i = 0; i < 3; i++)
-    {
-        std::cout << " Psez[" <<  i << "] = " << std::fixed << std::setprecision(4) << m_dGsSatVecSez[i] << std::endl;
-     
-    }
-
-    double m_dRange;
-    double m_dElev;
-    double m_dAz;
-
-    double m_dRangeDt;
-    double m_dElevDt;
-    double m_dAzDt;
-
-    // Get angles and distance for gs-sat vector
-    getAngles(m_dGsSatVecSez, m_dElev, m_dAz, m_dRange);
-    getAngles(m_dGsSatVecSezDt, m_dElevDt, m_dAzDt, m_dRangeDt);
-
-    std::cout << "Elevation: " << std::fixed << std::setprecision(4) << rad2deg(m_dElev) << std::endl;
-    std::cout << "Azimuth: " << std::fixed << std::setprecision(4) << rad2deg(m_dAz) << std::endl;
-    std::cout << "Range: " << std::fixed << std::setprecision(4) << m_dRange << std::endl;
-
-
-    std::cout << "Doppler shift (100MHz): " << std::fixed << std::setprecision(3) << dopplerShift(m_dRange, m_dRangeDt, Dt) << std::endl;
-    return;
-}
-/* dopplerShift - takes two ranges separated by Dt seconds and returns the doppler shift per 100 MHz
+/* dopplerShift - takes two slant ranges separated by Dt seconds and returns the doppler shift per 100 MHz
 *   inputs: dRange - range to sat at t0, dRangeDt - range to sat at t0 + dt, Dt - delta t in seconds
 *   outputs: returns Doppler shift per 100 MHz of carrier frequency
 *   author: Martin Elfvelin
@@ -337,19 +19,6 @@ double dopplerShift(double dRange, double dRangeDt, double Dt)
     return dShift*1000;
 }
 
-// Take the current time and return epoch? then make it a vector of epochs destroy if next track ok
-long mSecSince1970()
-{
-    time_t m_secSince1970;
-    long m_nMiliSec;
-    m_secSince1970 = time(NULL);        // returns seconds since gmt 00:00 1970
-    
-    m_nMiliSec = (long)m_secSince1970;
-    m_nMiliSec = m_nMiliSec*1000;
-
-    return m_nMiliSec;
-}
-
 /* teme2pef - takes a position vector in TEME and rotates it to PEF by matrix multiplication using GMST 
 *   inputs: dpPosVecTeme - pointer to a position vector in TEME
 *           gsto - Greenwich mean sidereal time (angle between the Greenwich meridian and the vernal equinox)
@@ -361,8 +30,6 @@ void teme2pef(double *pdPosVecPef, double *pdPosVecTeme, double gsto)
 {
     double rotMat[3][3];
 
-    // Need to get Jdate
-
     rotMat[0][0] = cos(gsto);       rotMat[0][1] = sin(gsto);   rotMat[0][2] = 0;
     rotMat[1][0] = -1 * sin(gsto);  rotMat[1][1] = cos(gsto);   rotMat[1][2] = 0;
     rotMat[2][0] = 0;               rotMat[2][1] = 0;           rotMat[2][2] = 1;
@@ -371,7 +38,6 @@ void teme2pef(double *pdPosVecPef, double *pdPosVecTeme, double gsto)
     pdPosVecPef[1] = rotMat[1][0] * pdPosVecTeme[0] + rotMat[1][1] * pdPosVecTeme[1] + rotMat[1][2] * pdPosVecTeme[2];
     pdPosVecPef[2] = rotMat[2][0] * pdPosVecTeme[0] + rotMat[2][1] * pdPosVecTeme[1] + rotMat[2][2] * pdPosVecTeme[2];
     
-
     return;
 }
 
@@ -421,7 +87,7 @@ double getGeocentricLatitude(double dLatGeod)
 /*  currentJdut1 - returns the Julian Day in UT1 based on the input time
 *   inputs: pointer to time_t object
 *   outputs: returns Jdut1 (number of days + fractional day since 4713 BC)
-*   function calls: jday() - (SGP4, Vallado)
+*   function calls: jday() - (SGP4, Vallado), gmtime <ctime>
 *   author: Martin Elfvelin
 */
 double currentJdut1(std::time_t *t)
@@ -455,6 +121,7 @@ double currentJdut1(std::time_t *t)
 *                       dAltitude - height over geoid in km
 *   outputs: GS site vector in PEF coordinate frame
 *   author: Martin Elfvelin
+*   function calls: sqrt(), pow(), cos(), sin() - (cmath), getGeocentricLatitude()
 */
 void gsCoord(double *pdCoordVec, double dLatGeod, double dLonGeod, double dAltitude)
 {
@@ -482,6 +149,7 @@ void gsCoord(double *pdCoordVec, double dLatGeod, double dLonGeod, double dAltit
 /* getAngles - takes a GS-Satellite SEZ vector and computes elevation, azimuth and range
 *   input: dGsSatVecSez - double pointer to GS-satellite vector
 *   outputs: Elevation (rad), Azimuth (rad, 0-2pi clockwise from north), range (km)
+*   function calls: sqrt(), pow(), asin(), atan() - (cmath)
 *   author: Martin Elfvelin
 */
 void getAngles(double *dGsSatVecSez, double& dElev, double& dAz, double& dRange)
@@ -516,6 +184,7 @@ double deg2Rad(double dDeg)
 *   outputs: double array with sys times during which elevation will be > 0 deg, one time corresponds to one pass
 *   returns: passcount 
 *   author: Martin Elfvelin
+*   function calls: time() - <ctime>, instantPredict(), 
 */
 int passFinder(double *pdPassTimes)
 {
@@ -556,22 +225,6 @@ int passFinder(double *pdPassTimes)
                 std::cout << "Pass number: " << passcount ;
                 std::cout << " found at timestamp: " << std::fixed << std::setprecision(2) << m_dTimeStamp[i] << std::endl;
             #endif
-
-            /* Remove if pass monitoring is nominal
-            if(i > 0)       // Could be two conditions in one if
-            {
-                if(m_dElev[i-1] <= 0.0)     // If previous elevation was <= 0
-                {
-                    pdPassTimes[passcount] = m_dTimeStamp[i];
-                    passcount++;
-
-                    
-                }
-                else
-                {
-                    
-                } 
-            } */
         }
     }
 
@@ -583,7 +236,7 @@ int passFinder(double *pdPassTimes)
     }
 
     return passcount;
-} /* passFinder() */
+}
 
 /*  getDopplerProfile - takes AOS time and prints range, angles and doppler shift (Hz per 100MHz)
 *       for the whole pass.
@@ -633,7 +286,7 @@ void getDopplerProfile(double dTimeStamp)
     return;
 }
 
-/*  printDateTime - takes an std::time_t object and prints the date as yyy-mm-dd
+/*  printDate - takes an std::time_t object and prints the date as yyy-mm-dd
 *   inputs: time_t t (seconds since Jan 1970)
 *   outputs: none
 *   author: Martin Elfvelin
@@ -651,10 +304,7 @@ void printDate(std::time_t t)
     double *jd = &j_day;;
     double *jdfrac = &j_dayfrac;
 
-
-    // std::time_t t = std::time(0);   // get time now
     std::tm* now = std::gmtime(&t);
-    // std::cout << (now->tm_year + 1900) << '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << "\n";
 
     year = now->tm_year + 1900;
     mon = now->tm_mon + 1;
@@ -683,9 +333,7 @@ void printDate(std::time_t t)
         std::cout << (now->tm_year + 1900) << '-' << (now->tm_mon + 1) << '-' <<  now->tm_mday << "\n";
     }
 
-    // std::cout << "YYYY-MM-DD: " << year << mon <<  day << std::endl;
-    // std::cout << "HH-MM-SS: " << hour << min <<  sec << std::endl;
-    // Using Vallado's jday function from SGP4.c or SGP4.cpp
+    // Using Vallado's jday function from SGP4.c or SGP4.cpp this is not used
     jday(year, mon,  day, hour, min, sec, &j_day, &j_dayfrac);
 
     #ifdef debug
@@ -709,7 +357,7 @@ void printDateTime(std::time_t t)
     int day;
     int hour;
     int min;
-    double sec;
+    int sec;
 
     std::tm* now = std::gmtime(&t);
     year = now->tm_year + 1900;
@@ -744,36 +392,36 @@ void printDateTime(std::time_t t)
     {
         if(hour < 10 && min < 10 && sec < 10)
         {
-            std::cout << "0" << hour << "-0" << min << "-0" << sec << std::endl;
+            std::cout << "0" << hour << ":0" << min << ":0" << sec  ;
         }
         else if(hour < 10 && min < 10)
         {
-            std::cout << "0" << hour << "-0" << min << "-" << sec << std::endl;
+            std::cout << "0" << hour << ":0" << min << ":" << sec  ;
         }
         else if(hour < 10 && sec < 10)
         {
-            std::cout << "0" << hour << "-" << min << "-0" << sec << std::endl;
+            std::cout << "0" << hour << ":" << min << ":0" << sec  ;
         }
         else if(hour < 10)
         {
-            std::cout << "0" << hour << "-" << min << "-" << sec << std::endl;
+            std::cout << "0" << hour << ":" << min << ":" << sec  ;
         }
         else if(min < 10 && sec < 10)
         {
-            std::cout << "" << hour << "-0" << min << "-0" << sec << std::endl;
+            std::cout << "" << hour << ":0" << min << ":0" << sec  ;
         }
         else if(min < 10)
         {
-            std::cout << "" << hour << "-0" << min << "-" << sec << std::endl;
+            std::cout << "" << hour << ":0" << min << ":" << sec  ;
         }
         else if(sec < 10)
         {
-            std::cout << "" << hour << "-" << min << "-0" << sec << std::endl;
+            std::cout << "" << hour << ":" << min << ":0" << sec  ;
         }
     }
     else
     {
-        std::cout << hour << "-" << min << "-" << sec << std::endl;    
+        std::cout << hour << ":" << min << ":" << sec  ;    
     }
     
     return;
@@ -867,7 +515,7 @@ int findAOSLOS(double dStartTime, double& dAosTime, double& dLosTime)
     #endif /* debug */
     
     dLosTime = m_dTimeStamp;
-    delete m_pdResults;
+    delete[] m_pdResults;
     return 0;
 } 
 /* printLivePass - takes a time_t object with AOS time and prints out antenna angles live
@@ -926,6 +574,10 @@ int printLivePass(std::time_t AOS)
     return 0;
 }
 
+/* main() - contains examples on how to use tracking functions
+*
+*
+*/
 int main(void)
 {
     double Angles[5];
@@ -940,36 +592,50 @@ int main(void)
     std::time_t timeArg = time(0);
     doubPtr = instantPredict(timeArg);
 
+    /* // simple instant predict 
     for(int i = 0; i < 5; i++)
     {
         Angles[i] = doubPtr[i];
         std::cout << "Angles: " << std::fixed << std::setprecision(4) << *(doubPtr + i) << std::endl;
     }
-       
+    */ 
+
+    // passFinder finds passes for the next 2 days
     if((m_nPasscount = passFinder(m_pdPassTimes)) == 0)
     {
         std::cout << "Pass did not find any passes" << std::endl;   
     }
+    // passes found, print out AOS and LOS times
     else
-    {
+    {   
+        // implementing a pass ID might be helpful
         std::cout << "Pass finder found " << m_nPasscount << " passes" <<  std::endl;      
+        std::cout << "with the following AOS/LOS times: " << std::endl;
+        // loop over all found passes and print out AOS/LOS times              
+        for(int i = 0; i < m_nPasscount; i++)
+        {
+            if (findAOSLOS(m_pdPassTimes[i], m_dAosTime, m_dLosTime) == -1)
+            {
+                std::cout << "Error in findAOSLOS" << std::endl;   
+            }
+            else
+            {
+                std::cout << "Pass number: " << i;
+                std::cout << " AOS: ";
+                printDateTime(m_dAosTime);
+                std::cout << " LOS: ";
+                printDateTime(m_dLosTime);
+                std::cout << std::endl;
+            }
+        }
     }
 
-    for(int i = 0; i < m_nPasscount; i++)
-    {
-        std::cout << " (main) Timestamp: " << std::fixed << std::setprecision(2) << m_pdPassTimes[i] << std::endl;
-    }
-    
+    // from passes found we can select one to live track
     std::cout << m_nPasscount << " passes were found, pls select one to get angles for: " << std::endl;
     std::cin >> m_nPass;
     
-    // getDopplerProfile(m_pdPassTimes[m_nPass]);
-
-    // works to add seconds to time_t object
-    std::time_t testtime = time(0);
-    //printDate(testtime);
-    testtime = testtime + 86400;
-    //printDate(testtime);
+    // this function only prints out all angles to terminal
+    //getDopplerProfile(m_pdPassTimes[m_nPass]);
 
     //printDateTime(testtime);
     //printDateTime(m_pdPassTimes[0]);
@@ -982,13 +648,14 @@ int main(void)
 
     std::cout << "For the chosen pass:" << std::endl << "AOS: ";
     printDateTime(m_dAosTime);
+    std::cout << std::endl;
     std::cout << "LOS: ";
     printDateTime(m_dLosTime);
     std::cout << std::endl;
-
+    
     printLivePass(m_dAosTime);
 
-    delete m_pdPassTimes;
-    
+    delete[] m_pdPassTimes;
+    delete doubPtr;
     return 0;
 }

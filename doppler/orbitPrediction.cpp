@@ -1,7 +1,18 @@
 // orbitPrediction
 #include "orbitPrediction.h"
 
-// fix tle import
+/* instantPredict() - takes a time_t object containing sys time and returns antenna angles,
+*                       slant range doppler shift per 100 MHz as seen from GS location
+*                       (defined in this funciton) and timestamp for given input time
+*   inputs: time_t timeObject (unix time, sec since Jan 1 1970 00:00:00 UTC)
+*   ouputs:  doubles for elevation (deg), azimuth (deg), slant range (km), doppler (Hz), timestamp(sec)
+*   returns: pointer to array contaning results
+*   note: TLE is read at every prediction atm, this should obviously be changed, additionally function
+*           should be split up so GS location is defined outside etc maybe by using an init function 
+*           that reads the TLE and sets the GS location. Extra note: TLE format should be 3 lines, only one
+*           satellite per file, see folder tles
+*   author: Martin Elfvelin
+*/
 double *instantPredict(std::time_t timeObject)
 {
 	// Initialization of file handling variables
@@ -32,7 +43,7 @@ double *instantPredict(std::time_t timeObject)
         to compute Doppler shift analytically yielding higher accuracy      */
     double m_dVelVec[3] = {0};
     double m_dVelVecDt[3] = {0};
-    // Init Dt, time between state vectors used for Doppler calculation
+    // Init Dt, time between state vectors, used for Doppler calculation
     double Dt = 1;
     
     // Init of GS latitude and longitude (geodetic) change gs position here
@@ -54,15 +65,13 @@ double *instantPredict(std::time_t timeObject)
     // Init of return values
     double *m_pdRetVals = nullptr;
     m_pdRetVals = new double[5];
-    
-    // double gsto = gstime_SPG4(jdut1);
 
     #ifdef debug
         std::cout << "############## testImport() ###########" << std::endl;
     #endif /* debug */
     
-    // Try using a string for file location
-    in_file = fopen("tles/estcube1.TLE","r");
+    // change satellite by changing TLE here
+    in_file = fopen("tles/gomx4b.TLE","r");
 
     if(in_file != NULL)
     {
@@ -145,19 +154,16 @@ double *instantPredict(std::time_t timeObject)
         std::cout << "Elevation: " << std::fixed << std::setprecision(4) << rad2deg(m_dElev) << std::endl;
         std::cout << "Azimuth: " << std::fixed << std::setprecision(4) << rad2deg(m_dAz) << std::endl;
         std::cout << "Range: " << std::fixed << std::setprecision(4) << m_dRange << std::endl;
-
         std::cout << "Doppler shift (100MHz): " << std::fixed << std::setprecision(3) << dopplerShift(m_dRange, m_dRangeDt, Dt) << std::endl;
-
         std::cout << "Azi before return: " << std::fixed << std::setprecision(3) << rad2deg(m_dAz) << std::endl;
         std::cout << "Timestamp: " << std::fixed << std::setprecision(3) << m_dRetVals[4] << std::endl;        
     #endif /* debug */
     
 
     m_pdRetVals[0] = rad2deg(m_dElev);
-    std::cout << "Az (rad): " << std::fixed << std::setprecision(2) << m_dAz << std::endl;
     m_pdRetVals[1] = rad2deg(m_dAz);
     m_pdRetVals[2] = m_dRange;
-    m_pdRetVals[3] = dopplerShift(m_dRange, m_dRangeDt, Dt);
+    m_pdRetVals[3] = -1 * dopplerShift(m_dRange, m_dRangeDt, Dt);
     m_pdRetVals[4] = (double)timeObject;
 
     return m_pdRetVals;

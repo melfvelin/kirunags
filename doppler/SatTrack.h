@@ -15,9 +15,7 @@
 #include "SGP4.h"
 #include "orbitPrediction.h"
 
-void testImport();
 double dopplerShift(double dRange, double dRangeDt, double Dt);
-long mSecSince1970();
 void teme2pef(double *pdPosVecPef, double *pdPosVecTeme, double gsto);
 void pef2sez(double dpVecSez[], double *dpVecPef, double dLatGeod, double dLonGeod);
 double getGeocentricLatitude(double dLatGeod);
