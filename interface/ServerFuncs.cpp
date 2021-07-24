@@ -248,7 +248,7 @@ namespace ServerFuncs
 	 *	This function is only partially implemented and will be combined with or replaced by the ASM sync function
 	 */
 
-	int MsgHandler(int nSockDesc, uint8_t *pnBuffer, uint32_t& nValread)
+	int MsgHandler(uhd::usrp::multi_usrp::sptr usrp, uint8_t *pnBuffer, uint32_t& nValread, Transmitter TransmitterObj)
 	{
 		static uint32_t m_nMsglen;
 		static uint32_t m_nMsgType;
@@ -291,7 +291,19 @@ namespace ServerFuncs
 				std::cout << "TC Frame decode start" << std::endl;
 				m_pnData = (uint8_t *)malloc(sizeof(uint64_t));
 				ServerFuncs::DecapsulateTC(pnBuffer, m_nMsglen, m_nMsgType, m_nCltuSize, m_pnData);
-				
+				// use m_nMsglen to know how much data to transmit with the USRP
+				// make a std::vector of uint8 and copy tc to it
+				// memcpy is ok if resize first:
+				std::vector<uint8_t> OriginalBits;
+				std::vector<std::complex<float> > modulatedSamps;	//TRANSMITTER OUTPUT
+				OriginalBits.resize(m_nMsglen);
+				memcpy(&OriginalBits[0], pnBuffer, m_nMsglen);
+				TransmitterObj.Execute(OriginalBits, modulatedSamps);
+				test_exec(usrp, modulatedSamps, modulatedSamps.size());
+
+
+
+				// send ModulatedBits using ModulatedBits.size()
 				// TC accept condition
 				if(m_nCltuSize > 0)
 				{	
@@ -325,6 +337,10 @@ namespace ServerFuncs
 
 			case 5:
 				std::cout << "Doppler Frame decode start" << std::endl;
+				// set lo_offset
+				uhd::tune_request_t tune_request;
+        		tune_request = uhd::tune_request_t(freq, lo_offset);
+        		usrp->set_tx_freq(tune_request, channel_nums[i]);
 				break;
 
 			case 6:

@@ -281,7 +281,7 @@ namespace server{
 	*	outputs: none
 	*	function calls: ServerFuncs::MsgHandler() when data arrives on the TCP socket
 	*/
-	void SetupServer(void)
+	void SetupServer(Transmitter TransmitterObj)
 	{
 
 		int m_nOpt = TRUE;  
@@ -430,7 +430,7 @@ namespace server{
 	                {  
 	                	// This is where received messages are dispatched to a message handler or sync function	                    	                    
 	                    // server::FindAsmOne(buffer, m_nMsgType);
-	                    ServerFuncs::MsgHandler(m_nSockDesc, buffer, m_nValread);
+	                    ServerFuncs::MsgHandler(usrp, buffer, m_nValread, TransmitterObj);
 	                }  
 	            }  
 	        }  
