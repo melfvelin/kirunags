@@ -146,6 +146,36 @@ void gsCoord(double *pdCoordVec, double dLatGeod, double dLonGeod, double dAltit
     return;
 }
 
+void getlatlon(double *dpPosVec, double *dpLatLon)
+{
+    double x = dpPosVec[0];
+    double y = dpPosVec[1];
+    double z = dpPosVec[2];
+
+    const double a = 6378137;
+    const double f = 0.0034;
+    const double b = 6356800;
+    const double e = sqrt((pow(a,2) - pow(b,2)) / pow(a,2));
+    const double e2 = sqrt((pow(a,2) - pow(b,2)) / pow(b,2));
+
+    double m_dLat, m_dLon, m_dHeight, m_dN, m_dTheta, m_dP;
+
+    m_dP = sqrt(pow(x, 2), pow(y, 2));
+    m_dTheta = atan2(a*z, b*m_dP);
+    m_dLon = atan2(y, x);
+    m_dLat = atan2((z+pow(e2, 2)*b*pow(sin(m_dTheta), 3)), (p-pow(e,2)*a*cos(m_dTheta)));
+    m_dN = a / sqrt(1 - pow(e, 2)*pow(sin(m_dLat), 2));
+
+    double m = (p / cos(lat));
+    m_dHeight = m - N;
+
+    dpLatLon[0] = m_dLat;
+    dpLatLon[1] = m_dLon;
+    dpLatLon[2] = m_dHeight;
+
+    return;
+}
+
 /* getAngles - takes a GS-Satellite SEZ vector and computes elevation, azimuth and range
 *   input: dGsSatVecSez - double pointer to GS-satellite vector
 *   outputs: Elevation (rad), Azimuth (rad, 0-2pi clockwise from north), range (km)

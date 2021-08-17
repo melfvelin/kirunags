@@ -131,6 +131,15 @@ double *instantPredict(std::time_t timeObject)
     teme2pef(m_dPosVecPef, m_dPosVecTeme, gsto);
     teme2pef(m_dPosVecPefDt, m_dPosVecTemeDt, gsto);
 
+    // call lat/lon here
+    double *m_pdLatLon = nullptr;
+    m_pdLatLon = new double[3];
+    getlatlon(m_dPosVecPef, m_pdLatLon);
+
+    std::cout << "Lat: " << std::fixed << std::setprecision(4) << rad2deg(m_pdLatLon[0]) << std::endl;
+    std::cout << "Lon: " << std::fixed << std::setprecision(4) << rad2deg(m_pdLatLon[1]) << std::endl;
+    std::cout << "Height: " << std::fixed << std::setprecision(4) << m_pdLatLon[2] << std::endl;
+
     // Compute ground station position vector in PEF
     gsCoord(m_dGsVecPef, m_dLatGeod, m_dLonGeod, m_dAltitude);
 
