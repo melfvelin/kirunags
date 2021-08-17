@@ -14,7 +14,7 @@
 
 #include "TLE.h"
 #include "SGP4.h"
-#include "test1.h"
+#include "SatTrack.h"
 
 double *instantPredict(std::time_t timeObject);
 

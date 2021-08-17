@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <iostream>
 #include "TLE.h"
-#include "SGP4.h"
 
 // parse the double
 double gd(char *str, int ind1, int ind2);
