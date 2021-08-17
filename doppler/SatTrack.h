@@ -29,5 +29,6 @@ double deg2Rad(double dDeg);
 int passFinder(double *m_pdPassTimes);
 int findAOSLOS(double dStartTime, double& dAosTime, double& dLosTime);
 void getDopplerProfile(double dTimeStamp);
+void getlatlon(double *dpPosVec, double *dpLatLon);
 
 #endif
