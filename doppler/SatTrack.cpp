@@ -146,6 +146,14 @@ void gsCoord(double *pdCoordVec, double dLatGeod, double dLonGeod, double dAltit
     return;
 }
 
+/* getlatlon - takes position vector in ECEF and computes geodetic latitude, longitude and altitude
+*   input: dpPosVec - pointer to double vector of ECEF coordinates, dpLatLon - pointer to double vector
+                        for storing results
+*   outputs: dpLatLon[0] - Latitude, dpLatLon[1] - Longitude, dpLatLon[2] - Altitude
+*   author: Martin Elfvelin
+*   function calls: sqrt(), pow(), cos(), sin(), atan(), atan2() - (cmath)
+*   note: Altitude cannot be trusted as error goes up to 50 km 
+*/
 void getlatlon(double *dpPosVec, double *dpLatLon)
 {
     double x = 1000 * dpPosVec[0];
@@ -632,6 +640,10 @@ int main(void)
         std::cout << "Angles: " << std::fixed << std::setprecision(4) << *(doubPtr + i) << std::endl;
     }
     */ 
+
+    // To print angles of a satellite:
+    std::time_t timeArg = time(0);
+    printLivePass(timeArg);
 
     // passFinder finds passes for the next 2 days
     if((m_nPasscount = passFinder(m_pdPassTimes)) == 0)

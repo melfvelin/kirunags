@@ -135,6 +135,7 @@ double *instantPredict(std::time_t timeObject)
     double *m_pdLatLon = nullptr;
     m_pdLatLon = new double[3];
     getlatlon(m_dPosVecPef, m_pdLatLon);
+    // m_pdLatLon contains latitude, longitide, altitude
 
     // Compute ground station position vector in PEF
     gsCoord(m_dGsVecPef, m_dLatGeod, m_dLonGeod, m_dAltitude);
