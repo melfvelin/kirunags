@@ -148,9 +148,9 @@ void gsCoord(double *pdCoordVec, double dLatGeod, double dLonGeod, double dAltit
 
 void getlatlon(double *dpPosVec, double *dpLatLon)
 {
-    double x = dpPosVec[0];
-    double y = dpPosVec[1];
-    double z = dpPosVec[2];
+    double x = 1000 * dpPosVec[0];
+    double y = 1000 * dpPosVec[1];
+    double z = 1000 * dpPosVec[2];
 
     const double a = 6378137;
     const double f = 0.0034;
@@ -163,7 +163,7 @@ void getlatlon(double *dpPosVec, double *dpLatLon)
     m_dP = sqrt(pow(x, 2) + pow(y, 2));
     m_dTheta = atan2(a*z, b*m_dP);
     m_dLon = atan2(y, x);
-    m_dLat = atan2((z+pow(e2, 2)*b*pow(sin(m_dTheta), 3)), (m_dP-pow(e,2)*a*cos(m_dTheta)));
+    m_dLat = atan((z+pow(e2, 2)*b*pow(sin(m_dTheta), 3)) / (m_dP-pow(e,2)*a*cos(m_dTheta)));
     m_dN = a / sqrt(1 - pow(e, 2)*pow(sin(m_dLat), 2));
 
     double m = (m_dP / cos(m_dLat));
