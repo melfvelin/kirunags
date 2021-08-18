@@ -71,7 +71,7 @@ double *instantPredict(std::time_t timeObject)
     #endif /* debug */
     
     // change satellite by changing TLE here
-    in_file = fopen("tles/estcube1.TLE","r");
+    in_file = fopen("tles/ao91.TLE","r");
 
     if(in_file != NULL)
     {

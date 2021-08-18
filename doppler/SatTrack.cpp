@@ -575,16 +575,16 @@ int printLivePass(std::time_t AOS)
     else
     {
         std::cout << "Waiting for pass to start..." << std::endl;
-        while(tNow < AOS)
+        /* while(tNow < AOS)
         {
             // waiting for pass to start
             tNow = time(0);
-        }
+        } */
         std::cout << "Pass starting..." << std::endl;
         m_pdResults = instantPredict(tNow);
         m_dElev = m_pdResults[0];
         
-        while(m_dElev > 0.0)
+        while(m_dElev > 0.0 || m_dElev < 0.0)
         {
             // get angles and print here
             // use a delay function
@@ -599,7 +599,7 @@ int printLivePass(std::time_t AOS)
             std::cout << "  Doppler: " << m_dDoppler << std::endl;
             std::cout << "Lat: " << std::fixed << std::setprecision(4) << rad2deg(m_pdResults[5]) << std::endl;
             std::cout << "Lon: " << std::fixed << std::setprecision(4) << rad2deg(m_pdResults[6]) << std::endl;
-            std::cout << "Height: " << std::fixed << std::setprecision(4) << m_pdResults[7] << std::endl;
+            std::cout << "Height: " << std::fixed << std::setprecision(4) << m_pdResults[7]/1000 << std::endl;
             usleep(m_nMicrosec * 1);       // sleep for 1000 ms
         }
     }
