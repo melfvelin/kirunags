@@ -160,14 +160,14 @@ void getlatlon(double *dpPosVec, double *dpLatLon)
 
     double m_dLat, m_dLon, m_dHeight, m_dN, m_dTheta, m_dP;
 
-    m_dP = sqrt(pow(x, 2), pow(y, 2));
+    m_dP = sqrt(pow(x, 2) + pow(y, 2));
     m_dTheta = atan2(a*z, b*m_dP);
     m_dLon = atan2(y, x);
-    m_dLat = atan2((z+pow(e2, 2)*b*pow(sin(m_dTheta), 3)), (p-pow(e,2)*a*cos(m_dTheta)));
+    m_dLat = atan2((z+pow(e2, 2)*b*pow(sin(m_dTheta), 3)), (m_dP-pow(e,2)*a*cos(m_dTheta)));
     m_dN = a / sqrt(1 - pow(e, 2)*pow(sin(m_dLat), 2));
 
-    double m = (p / cos(lat));
-    m_dHeight = m - N;
+    double m = (m_dP / cos(m_dLat));
+    m_dHeight = m - m_dN;
 
     dpLatLon[0] = m_dLat;
     dpLatLon[1] = m_dLon;
@@ -597,6 +597,9 @@ int printLivePass(std::time_t AOS)
             std::cout << "El: " << std::fixed << std::setprecision(3) << m_dElev;
             std::cout << "  Az: " << m_dAz << "  Range: " << m_dRange;
             std::cout << "  Doppler: " << m_dDoppler << std::endl;
+            std::cout << "Lat: " << std::fixed << std::setprecision(4) << rad2deg(m_pdResults[5]) << std::endl;
+            std::cout << "Lon: " << std::fixed << std::setprecision(4) << rad2deg(m_pdResults[6]) << std::endl;
+            std::cout << "Height: " << std::fixed << std::setprecision(4) << m_pdResults[7] << std::endl;
             usleep(m_nMicrosec * 1);       // sleep for 1000 ms
         }
     }

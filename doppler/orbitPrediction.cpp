@@ -64,14 +64,14 @@ double *instantPredict(std::time_t timeObject)
 
     // Init of return values
     double *m_pdRetVals = nullptr;
-    m_pdRetVals = new double[5];
+    m_pdRetVals = new double[8];
 
     #ifdef debug
         std::cout << "############## testImport() ###########" << std::endl;
     #endif /* debug */
     
     // change satellite by changing TLE here
-    in_file = fopen("tles/gomx4b.TLE","r");
+    in_file = fopen("tles/estcube1.TLE","r");
 
     if(in_file != NULL)
     {
@@ -136,10 +136,6 @@ double *instantPredict(std::time_t timeObject)
     m_pdLatLon = new double[3];
     getlatlon(m_dPosVecPef, m_pdLatLon);
 
-    std::cout << "Lat: " << std::fixed << std::setprecision(4) << rad2deg(m_pdLatLon[0]) << std::endl;
-    std::cout << "Lon: " << std::fixed << std::setprecision(4) << rad2deg(m_pdLatLon[1]) << std::endl;
-    std::cout << "Height: " << std::fixed << std::setprecision(4) << m_pdLatLon[2] << std::endl;
-
     // Compute ground station position vector in PEF
     gsCoord(m_dGsVecPef, m_dLatGeod, m_dLonGeod, m_dAltitude);
 
@@ -174,6 +170,9 @@ double *instantPredict(std::time_t timeObject)
     m_pdRetVals[2] = m_dRange;
     m_pdRetVals[3] = -1 * dopplerShift(m_dRange, m_dRangeDt, Dt);
     m_pdRetVals[4] = (double)timeObject;
+    m_pdRetVals[5] = m_pdLatLon[0];
+    m_pdRetVals[6] = m_pdLatLon[1];
+    m_pdRetVals[7] = m_pdLatLon[2];
 
     return m_pdRetVals;
 }
