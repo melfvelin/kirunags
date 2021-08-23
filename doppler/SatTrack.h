@@ -30,5 +30,6 @@ int passFinder(double *m_pdPassTimes);
 int findAOSLOS(double dStartTime, double& dAosTime, double& dLosTime);
 void getDopplerProfile(double dTimeStamp);
 void getlatlon(double *dpPosVec, double *dpLatLon);
+double norm(double *dpVec);
 
 #endif

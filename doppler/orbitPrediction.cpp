@@ -42,6 +42,7 @@ double *instantPredict(std::time_t timeObject)
     /* Init of velocity vectors, these are not used as of now but can be used
         to compute Doppler shift analytically yielding higher accuracy      */
     double m_dVelVec[3] = {0};
+    double m_dVelVecPef[3] = {0};
     double m_dVelVecDt[3] = {0};
     // Init Dt, time between state vectors, used for Doppler calculation
     double Dt = 1;
@@ -130,6 +131,7 @@ double *instantPredict(std::time_t timeObject)
     // TEME -> PEF transform for Position vectors
     teme2pef(m_dPosVecPef, m_dPosVecTeme, gsto);
     teme2pef(m_dPosVecPefDt, m_dPosVecTemeDt, gsto);
+    teme2pef(m_dVelVecPef, m_dVelVec, gsto);
 
     // call lat/lon here
     double *m_pdLatLon = nullptr;
@@ -147,6 +149,19 @@ double *instantPredict(std::time_t timeObject)
         m_dGsSatVecPef[i] = m_dPosVecPef[i] - m_dGsVecPef[i];
         m_dGsSatVecPefDt[i] = m_dPosVecPefDt[i] - m_dGsVecPef[i];        
     }
+
+    // here compute analytical doppler?
+    double Pnorm = norm(m_dGsSatVecPef);
+    double m_dGsSatVecUnit[3] = {0};
+
+    for(int i = 0; i < 3; i++)
+    {
+        m_dGsSatVecUnit[i] = m_dGsSatVecPef/Pnorm;
+    }
+    double dotVel = dot(m_dVelVecPef, m_dGsSatVecUnit);
+
+    double fD = 100000000 * dotVel / 300000000;
+    std::cout << "Analytical doppler: " << std::fixed << std::setprecision(4) << fD << std::endl;
 
     // Transformation of ground station - satellite vector to SEZ 
     pef2sez(m_dGsSatVecSez, m_dGsSatVecPef, m_dLatGeod, m_dLonGeod);

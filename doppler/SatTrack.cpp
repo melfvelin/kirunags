@@ -615,6 +615,34 @@ int printLivePass(std::time_t AOS)
     return 0;
 }
 
+double norm(double *dpVec)
+{
+    double m_dVec[3] = {0};
+
+    m_dVec[0] = dpVec[0];
+    m_dVec[1] = dpVec[1];
+    m_dVec[2] = dpVec[2];
+
+    double u = pow(m_dVec[0], 2) + pow(m_dVec[1], 2) + pow(m_dVec[2], 2);
+    return sqrt(u);
+}
+
+void cross(double *r, double *a, double *b)
+{
+
+    r[0] = a[1]*b[2]-a[2]*b[1];
+    r[1] = a[2]*b[0]-a[0]*b[2];
+    r[2] = a[0]*b[1]-a[1]*b[0];
+
+    return;
+}
+
+double dot(double *a, double *b)
+{
+    return a[0]*b[0] + a[1]*b[1] + a[2]*b[2];
+}
+
+
 /* main() - contains examples on how to use tracking functions
 *
 *
