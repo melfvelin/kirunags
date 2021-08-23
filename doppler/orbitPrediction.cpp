@@ -72,7 +72,7 @@ double *instantPredict(std::time_t timeObject)
     #endif /* debug */
     
     // change satellite by changing TLE here
-    in_file = fopen("tles/ao91.TLE","r");
+    in_file = fopen("tles/nayif.TLE","r");
 
     if(in_file != NULL)
     {
@@ -156,11 +156,12 @@ double *instantPredict(std::time_t timeObject)
 
     for(int i = 0; i < 3; i++)
     {
-        m_dGsSatVecUnit[i] = m_dGsSatVecPef/Pnorm;
+        m_dGsSatVecUnit[i] = m_dGsSatVecPef[i]/Pnorm;
     }
     double dotVel = dot(m_dVelVecPef, m_dGsSatVecUnit);
 
     double fD = 100000000 * dotVel / 300000000;
+    fD = -1000 * fD;
     std::cout << "Analytical doppler: " << std::fixed << std::setprecision(4) << fD << std::endl;
 
     // Transformation of ground station - satellite vector to SEZ 

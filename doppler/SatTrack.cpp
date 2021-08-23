@@ -670,7 +670,7 @@ int main(void)
     */ 
 
     // To print angles of a satellite:
-    std::time_t timeArg = time(0);
+    timeArg = time(0);
     printLivePass(timeArg);
 
     // passFinder finds passes for the next 2 days
