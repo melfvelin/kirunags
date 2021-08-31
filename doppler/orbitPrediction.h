@@ -16,7 +16,7 @@
 #include "SGP4.h"
 #include "SatTrack.h"
 
-double *instantPredict(std::time_t timeObject);
+double *instantPredict(std::time_t timeObject, char *line1, char *line2);
 
 #endif /* __ORBITPREDICTION__H  */
 

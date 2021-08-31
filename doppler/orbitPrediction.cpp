@@ -1,5 +1,6 @@
 // orbitPrediction
 #include "orbitPrediction.h"
+#define debug 1
 
 /* instantPredict() - takes a time_t object containing sys time and returns antenna angles,
 *                       slant range doppler shift per 100 MHz as seen from GS location
@@ -13,7 +14,7 @@
 *           satellite per file, see folder tles
 *   author: Martin Elfvelin
 */
-double *instantPredict(std::time_t timeObject)
+double *instantPredict(std::time_t timeObject, char *line1, char *line2)
 {
 	// Initialization of file handling variables
     char satID[40];
@@ -22,6 +23,8 @@ double *instantPredict(std::time_t timeObject)
     FILE *in_file = NULL;
     // Init of TLE object implemented by TLE.cpp
     TLE tle;
+    strcpy(lineOne, line1);
+    strcpy(lineTwo, line2);
 
     // Init of time variables
     double m_dJdayNow;
@@ -48,8 +51,8 @@ double *instantPredict(std::time_t timeObject)
     double Dt = 1;
     
     // Init of GS latitude and longitude (geodetic) change gs position here
-    double m_dLatGeod = deg2Rad(67.8404);
-    double m_dLonGeod = deg2Rad(20.4105);
+    double m_dLatGeod = deg2Rad(65.5848);
+    double m_dLonGeod = deg2Rad(22.1567);
     double m_dAltitude = 0.4;       
 
     // Init variables for range and angels 
@@ -67,50 +70,50 @@ double *instantPredict(std::time_t timeObject)
     double *m_pdRetVals = nullptr;
     m_pdRetVals = new double[8];
 
-    #ifdef debug
-        std::cout << "############## testImport() ###########" << std::endl;
-    #endif /* debug */
+    // #ifdef debug
+    //     std::cout << "############## testImport() ###########" << std::endl;
+    // #endif /* debug */
     
-    // change satellite by changing TLE here
-    in_file = fopen("tles/nayif.TLE","r");
+    // // change satellite by changing TLE here
+    // in_file = fopen("tles/aausat.TLE","r");
 
-    if(in_file != NULL)
-    {
-        #ifdef debug
-            std::cout << "File opened successfully" << std::endl;    
-        #endif /* debug */
+    // if(in_file != NULL)
+    // {
+    //     #ifdef debug
+    //         std::cout << "File opened successfully" << std::endl;    
+    //     #endif /* debug */
 
-    }
+    // }
 
-    if ((fgets(satID, 39, in_file)) != NULL )
-    {
-        #ifdef debug
-            std::cout << "Satellite ID read successfully" << std::endl;       
-        #endif /* debug */        
-    }
+    // if ((fgets(satID, 39, in_file)) != NULL )
+    // {
+    //     #ifdef debug
+    //         std::cout << "Satellite ID read successfully" << std::endl;       
+    //     #endif /* debug */        
+    // }
     
-    if ((fgets(lineOne, 255, in_file)) != NULL )
-    {
-        #ifdef debug
-            std::cout << "First line read successfully" << std::endl;       
-        #endif /* debug */        
-    }
+    // if ((fgets(lineOne, 255, in_file)) != NULL )
+    // {
+    //     #ifdef debug
+    //         std::cout << "First line read successfully" << std::endl;       
+    //     #endif /* debug */        
+    // }
 
-    if ((fgets(lineTwo, 255, in_file)) != NULL )
-    {
-        #ifdef debug
-            std::cout << "Second line read successfully" << std::endl;       
-        #endif /* debug */
-    }
+    // if ((fgets(lineTwo, 255, in_file)) != NULL )
+    // {
+    //     #ifdef debug
+    //         std::cout << "Second line read successfully" << std::endl;       
+    //     #endif /* debug */
+    // }
 
-    if(in_file)
-    {
-        fclose(in_file);
-    }
+    // if(in_file)
+    // {
+    //     fclose(in_file);
+    // }
 
-    #ifdef debug
-        std::cout << "Sat ID: " << satID << std::endl;
-    #endif /* debug */
+    // #ifdef debug
+    //     std::cout << "Sat ID: " << satID << std::endl;
+    // #endif /* debug */
 
     // get orbital elements from TLE file 
     tle.parseLines(lineOne, lineTwo);
@@ -148,6 +151,8 @@ double *instantPredict(std::time_t timeObject)
     {
         m_dGsSatVecPef[i] = m_dPosVecPef[i] - m_dGsVecPef[i];
         m_dGsSatVecPefDt[i] = m_dPosVecPefDt[i] - m_dGsVecPef[i];        
+
+        std::cout << "Pos vec Teme = " << std::fixed << std::setprecision(8) << m_dPosVecTeme[i] << " " << std::endl;
     }
 
     // here compute analytical doppler?
@@ -178,7 +183,7 @@ double *instantPredict(std::time_t timeObject)
         std::cout << "Range: " << std::fixed << std::setprecision(4) << m_dRange << std::endl;
         std::cout << "Doppler shift (100MHz): " << std::fixed << std::setprecision(3) << dopplerShift(m_dRange, m_dRangeDt, Dt) << std::endl;
         std::cout << "Azi before return: " << std::fixed << std::setprecision(3) << rad2deg(m_dAz) << std::endl;
-        std::cout << "Timestamp: " << std::fixed << std::setprecision(3) << m_dRetVals[4] << std::endl;        
+        std::cout << "Timestamp: " << std::fixed << std::setprecision(3) << timeObject << std::endl;        
     #endif /* debug */
     
 

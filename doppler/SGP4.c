@@ -242,7 +242,7 @@
                 // nodep used without a trigonometric function ahead
                 if ((rec->nodep < 0.0) && (opsmode == 'a'))
                     rec->nodep = rec->nodep + twopi;
-                if (fabs(xnoh - rec->nodep) > pi)
+                if (fabs(xnoh - rec->nodep) > M_PI)
                     if (rec->nodep < xnoh)
                         rec->nodep = rec->nodep + twopi;
                     else
@@ -633,7 +633,7 @@
         sghs = rec->ss4 * zns * (rec->sz31 + rec->sz33 - 6.0);
         shs = -zns * rec->ss2 * (rec->sz21 + rec->sz23);
         // sgp4fix for 180 deg incl
-        if ((rec->inclm < 5.2359877e-2) || (rec->inclm > pi - 5.2359877e-2))
+        if ((rec->inclm < 5.2359877e-2) || (rec->inclm > M_PI- 5.2359877e-2))
             shs = 0.0;
         if (rec->sinim != 0.0)
             shs = shs / rec->sinim;
@@ -646,7 +646,7 @@
         sghl = rec->s4 * znl * (rec->z31 + rec->z33 - 6.0);
         shll = -znl * rec->s2 * (rec->z21 + rec->z23);
         // sgp4fix for 180 deg incl
-        if ((rec->inclm < 5.2359877e-2) || (rec->inclm > pi - 5.2359877e-2))
+        if ((rec->inclm < 5.2359877e-2) || (rec->inclm > M_PI- 5.2359877e-2))
             shll = 0.0;
         rec->domdt = sgs + sghl;
         rec->dnodt = shs;
@@ -1374,7 +1374,7 @@
             satrec->x7thm1 = 7.0 * satrec->cosio2 - 1.0;
 
             /* --------------- deep space initialization ------------- */
-            if ((2 * pi / satrec->no_unkozai) >= 225.0)
+            if ((2 * M_PI/ satrec->no_unkozai) >= 225.0)
             {
                 satrec->method = 'd';
                 satrec->isimp = 1;
@@ -1690,8 +1690,8 @@
             if (xincp < 0.0)
             {
                 xincp = -xincp;
-                satrec->nodep = satrec->nodep + pi;
-                satrec->argpp = satrec->argpp - pi;
+                satrec->nodep = satrec->nodep + M_PI;
+                satrec->argpp = satrec->argpp - M_PI;
             }
             if ((satrec->ep < 0.0) || (satrec->ep > 1.0))
             {

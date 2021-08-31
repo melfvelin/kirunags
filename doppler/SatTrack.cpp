@@ -244,7 +244,7 @@ int passFinder(double *pdPassTimes)
         // include time stamp in return values?
         timeObject = tNow + 2 * 60 * i;                   // will start at Tnow and end at Tnow + 2 days
         //m_nPassTimes[i] = timeObject * 1000;
-        m_pdResults = instantPredict(timeObject);
+        // m_pdResults = instantPredict(timeObject);
         m_dElev[i] = m_pdResults[0];
         m_dAz[i] = m_pdResults[1];
         m_dRange[i] = m_pdResults[2];
@@ -311,7 +311,7 @@ void getDopplerProfile(double dTimeStamp)
     for(int i = 0; i < 1000; i++)
     {      
         timeArg = m_pdPassTimes[i];
-        m_pdResults = instantPredict(timeArg);      // get angles for each second of the pass, store in doubles
+        // m_pdResults = instantPredict(timeArg);      // get angles for each second of the pass, store in doubles
         m_dElev[i] = m_pdResults[0];
         m_dAz[i] = m_pdResults[1];
         m_dRange[i] = m_pdResults[2];
@@ -487,7 +487,7 @@ int findAOSLOS(double dStartTime, double& dAosTime, double& dLosTime)
 
     m_dTimeStamp = dStartTime;
     // first we get angles for the input time
-    m_pdResults = instantPredict(dStartTime);
+    // m_pdResults = instantPredict(dStartTime);
 
     // store results
     m_dElev = m_pdResults[0];
@@ -506,12 +506,12 @@ int findAOSLOS(double dStartTime, double& dAosTime, double& dLosTime)
     while(m_dElev > 0.0)
     {
         m_dTimeStamp = m_dTimeStamp - m_dTimeStep;
-        m_pdResults = instantPredict(m_dTimeStamp);
+        // m_pdResults = instantPredict(m_dTimeStamp);
         m_dElev = m_pdResults[0];
     }
 
     m_dTimeStamp = m_dTimeStamp + 1;
-    m_pdResults = instantPredict(m_dTimeStamp);
+    // m_pdResults = instantPredict(m_dTimeStamp);
 
     // store results
     m_dElev = m_pdResults[0];
@@ -530,7 +530,7 @@ int findAOSLOS(double dStartTime, double& dAosTime, double& dLosTime)
     dAosTime = m_dTimeStamp;
     m_dTimeStamp = dStartTime;
     // now we find LOS time 
-    m_pdResults = instantPredict(dStartTime);
+    // m_pdResults = instantPredict(dStartTime);
 
     // store results
     m_dElev = m_pdResults[0];
@@ -542,7 +542,7 @@ int findAOSLOS(double dStartTime, double& dAosTime, double& dLosTime)
     while(m_dElev > 0.0)
     {
         m_dTimeStamp = m_dTimeStamp + m_dTimeStep;
-        m_pdResults = instantPredict(m_dTimeStamp);
+        // m_pdResults = instantPredict(m_dTimeStamp);
         m_dElev = m_pdResults[0];
     }
 
@@ -589,7 +589,7 @@ int printLivePass(std::time_t AOS)
             tNow = time(0);
         } */
         std::cout << "Pass starting..." << std::endl;
-        m_pdResults = instantPredict(tNow);
+        m_pdResults = instantPredict(tNow, "1 41460U 16025E   21242.39479625  .00009777  00000+0  44554-3 0  9999\0", "2 41460  98.1533  27.3233 0146372 155.6309 205.1936 15.11738403293887\0");
         m_dElev = m_pdResults[0];
         
         while(m_dElev > 0.0 || m_dElev < 0.0)
@@ -597,7 +597,7 @@ int printLivePass(std::time_t AOS)
             // get angles and print here
             // use a delay function
             tNow = time(0);
-            m_pdResults = instantPredict(tNow);
+            m_pdResults = instantPredict(tNow, "1 41460U 16025E   21242.39479625  .00009777  00000+0  44554-3 0  9999\0", "2 41460  98.1533  27.3233 0146372 155.6309 205.1936 15.11738403293887\0");
             m_dElev = m_pdResults[0];
             m_dAz = m_pdResults[1];
             m_dRange = m_pdResults[2];
@@ -605,6 +605,7 @@ int printLivePass(std::time_t AOS)
             std::cout << "El: " << std::fixed << std::setprecision(3) << m_dElev;
             std::cout << "  Az: " << m_dAz << "  Range: " << m_dRange;
             std::cout << "  Doppler: " << m_dDoppler << std::endl;
+            std::cout << "Timestamp: " << std::fixed << std::setprecision(4) << m_pdResults[4] << std::endl;
             std::cout << "Lat: " << std::fixed << std::setprecision(4) << rad2deg(m_pdResults[5]) << std::endl;
             std::cout << "Lon: " << std::fixed << std::setprecision(4) << rad2deg(m_pdResults[6]) << std::endl;
             std::cout << "Height: " << std::fixed << std::setprecision(4) << m_pdResults[7]/1000 << std::endl;
@@ -659,7 +660,7 @@ int main(void)
     double m_dLosTime;
 
     std::time_t timeArg = time(0);
-    doubPtr = instantPredict(timeArg);
+    // doubPtr = instantPredict(timeArg);
 
     /* // simple instant predict 
     for(int i = 0; i < 5; i++)
